@@ -127,10 +127,10 @@ public class ComputerVision {
 	
 	// Logging function that propagates to the callback
 	public void Logd(String msg) {
-		mCallback.Logd(TAG, msg);
+		mCallback.cvLogd(TAG, msg);
 	}
 
 	public void Loge(String msg) {
-		mCallback.Loge(TAG, msg);
+		mCallback.cvLoge(TAG, msg);
 	}
 }

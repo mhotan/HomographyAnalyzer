@@ -3,7 +3,8 @@ package edu.uw.homographyanalyzer.global;
 /*
  * Global logging utility
  * This class makes it able to log easily from any other classes
- * 
+ * Implemented as a singleton that would need to be initialized
+ * from the main activity once before any other use.
  */
 public class GlobalLogger {
 	// A singleton
@@ -16,6 +17,7 @@ public class GlobalLogger {
 		mInterface = loggerInterface;
 	}
 	
+	// Get the singleton
 	public static GlobalLogger getInstance(){
 		if(mInstance == null){
 			throw new RuntimeException("Logger needs to be initialized!");
@@ -23,11 +25,12 @@ public class GlobalLogger {
 		return mInstance;
 	}
 	
-	public void globalLogd(String msg){
-		mInterface.Logd(msg);
+	// Just like Android's Log class
+	public void logd(String msg){
+		mInterface.logd(msg);
 	}
 	
-	public void globalLoge(String msg){
-		mInterface.Loge(msg);
+	public void loge(String msg){
+		mInterface.loge(msg);
 	}
 }

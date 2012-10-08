@@ -2,21 +2,22 @@ package edu.uw.homographyanalyzer.camera;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.provider.MediaStore.Images.Media;
 import edu.uw.homographyanalyzer.global.GlobalLogger;
 
 /*
- * Take a picture using an external application
+ * Take a picture using an external application.
+ * This class extends BaseImageTaker. Take a look at the class description
+ * to get an idea on how to use it
  */
 public class ExternalApplication extends BaseImageTaker {
-	
-	private String mTempFilePath = "/mnt/sdcard/download/temp.bmp";
+
+	private String mTempFilePath;
+	private String mTempFileName;
 	private final static int ACTIVITY_RESULT = 1;
 
 	// Temporary place to store the captured image
@@ -25,15 +26,15 @@ public class ExternalApplication extends BaseImageTaker {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		mTempFilePath = getExternalCacheDir() + "temp.bmp";
 		
-		mTemporaryFile = new File(mTempFilePath);
-		
-		if (!(mTemporaryFile.canWrite() && mTemporaryFile.canRead())) {
-			GlobalLogger.getInstance()
-					.globalLoge("ExternalApplication.java: mTemporary file is unwriteable/unreadable!");
-			throw new RuntimeException("ExternalApplication.java: mTemporary file is unwriteable/unreadable!");
-		}
+		// Default directory to store pictures
+		mTempFilePath = getExternalFilesDir(null).getAbsolutePath();
+		mTempFileName = System.currentTimeMillis()+ ".bmp";
+		// Time stamp the image name
+		mTemporaryFile = new File(mTempFilePath, mTempFileName);
+		GlobalLogger.getInstance().logd(
+				"Camera directory: " + mTemporaryFile.getAbsolutePath());
+		// Start camera intent
 		takePicture();
 	}
 
@@ -51,18 +52,13 @@ public class ExternalApplication extends BaseImageTaker {
 		// Picture is taken!
 		if (resultCode == RESULT_OK) {
 			try {
-				// Set the return value
-				setBitmap(Media.getBitmap(getContentResolver(),
-						Uri.fromFile(mTemporaryFile)));
+				if(!mTemporaryFile.exists())
+					throw new FileNotFoundException();
 				// Return and quit
-				finishAndReturnBitmap();
+				finishAndReturnImagePath(mTemporaryFile.getAbsolutePath());
 			} catch (FileNotFoundException e) {
-				GlobalLogger.getInstance().globalLoge(
+				GlobalLogger.getInstance().loge(
 						"ExternalApplication.java: temporary file not found!");
-				e.printStackTrace();
-			} catch (IOException e) {
-				GlobalLogger.getInstance().globalLoge(
-						"ExternalApplication.java: IO Exception!");
 				e.printStackTrace();
 			}
 		} else {

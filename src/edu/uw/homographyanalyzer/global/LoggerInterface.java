@@ -1,6 +1,10 @@
 package edu.uw.homographyanalyzer.global;
 
+/*
+ * Generic logging interface
+ * 
+ */
 public interface LoggerInterface {
-	public void Logd(String msg);
-	public void Loge(String msg);
+	public void logd(String msg);
+	public void loge(String msg);
 }

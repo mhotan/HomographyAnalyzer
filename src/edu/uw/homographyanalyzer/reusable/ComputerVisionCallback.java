@@ -22,8 +22,8 @@ public interface ComputerVisionCallback {
 	public void onInitServiceFinished();
 	public void onInitServiceFailed();
 	
-	public void Logd(String msg);
-	public void Logd(String tag, String msg);
-	public void Loge(String msg);
-	public void Loge(String tag, String msg);
+	public void cvLogd(String msg);
+	public void cvLogd(String tag, String msg);
+	public void cvLoge(String msg);
+	public void cvLoge(String tag, String msg);
 }
