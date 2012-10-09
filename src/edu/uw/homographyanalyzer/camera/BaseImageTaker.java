@@ -2,6 +2,7 @@ package edu.uw.homographyanalyzer.camera;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import edu.uw.homographyanalyzer.global.GlobalLogger;
 
 /*
@@ -26,7 +27,7 @@ public abstract class BaseImageTaker extends Activity {
 	// Key name of the string that encapsulates the output path
 	// to be parsed by onActivityResult()
 	public static final String INTENT_RESULT_IMAGE_PATH = "IMAGE_PATH";
-
+	public static final String INTENT_RESULT_IMAGE_URI = "IMAGE_URI";
 	
 	/*
 	 * Quit the activity and returns the image path
@@ -37,7 +38,14 @@ public abstract class BaseImageTaker extends Activity {
 		wrappedResult.putExtra(INTENT_RESULT_IMAGE_PATH, path);
 		this.setResult(RESULT_OK, wrappedResult);
 		this.finish();
-
+	}
+	
+	protected void finishAndReturnImagePath(Uri uriPath){
+		GlobalLogger.getInstance().logd("Picture taken successfully!");
+		Intent wrappedResult = new Intent();
+		wrappedResult.putExtra(INTENT_RESULT_IMAGE_URI, uriPath);
+		this.setResult(RESULT_OK, wrappedResult);
+		this.finish();
 	}
 
 	/*
@@ -46,7 +54,7 @@ public abstract class BaseImageTaker extends Activity {
 	 */
 	protected void finishFail() {
 		GlobalLogger.getInstance().logd("Picture taking failed!");
-		setResult(RESULT_CANCELED);
+		this.setResult(RESULT_CANCELED);
 		finish();
 	}
 }

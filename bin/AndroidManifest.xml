@@ -23,5 +23,6 @@
             </intent-filter>
         </activity>
         <activity android:name="edu.uw.homographyanalyzer.camera.ExternalApplication"></activity>
+        <activity android:name="edu.uw.homographyanalyzer.quicktransform.TransformationDemoActivity"></activity>
     </application>
 </manifest>

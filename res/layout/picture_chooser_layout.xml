@@ -4,16 +4,12 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
-    <android.support.v7.widget.GridLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" >
-    </android.support.v7.widget.GridLayout>
-
     <ImageButton
         android:id="@+id/take_picture_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
+        android:contentDescription="@string/picture_taker_descriptor"
         android:src="@drawable/ic_action_photo" />
 
     <ImageButton
@@ -21,6 +17,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
+        android:contentDescription="@string/picture_chooser_descriptor"
         android:src="@drawable/ic_action_select_all" />
 
 </LinearLayout>

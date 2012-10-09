@@ -1,14 +1,12 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    style="@style/AppTheme"
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:text="@string/hello_world"
-        tools:context=".Homography" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:layout_alignParentLeft="true" android:layout_alignParentTop="true">
+        <Button android:id="@+id/button1" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Button"/>
+        <ImageView android:id="@+id/base_image_view" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="110dp" android:contentDescription="@string/base_img_descriptor" android:scaleType="fitCenter" android:src="@drawable/ic_action_search_dark"/>
+        <ImageView android:id="@+id/query_image_view" android:layout_width="match_parent" android:layout_height="wrap_content" android:contentDescription="@string/query_img_descriptor" android:scaleType="fitCenter" android:src="@drawable/ic_action_search_dark"/>
+    </LinearLayout>
 
 </RelativeLayout>
