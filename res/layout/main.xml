@@ -84,7 +84,31 @@
             android:layout_height="match_parent"
             android:background="@color/default_background"
             android:contentDescription="@string/drawer_descriptor"
-            android:orientation="horizontal" >
+            android:orientation="vertical" >
+
+            <Spinner
+                android:id="@+id/features"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <Spinner
+                android:id="@+id/homography_methods"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/threshhold_seekbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/threshhold_seekbar_label"
+                android:textColor="@color/default_text_color"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <SeekBar
+                android:id="@+id/threshold_seekbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            
         </LinearLayout>
     </SlidingDrawer>
 

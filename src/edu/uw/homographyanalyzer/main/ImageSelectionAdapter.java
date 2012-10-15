@@ -9,7 +9,6 @@ import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -18,7 +17,6 @@ import android.widget.ImageView;
 import com.example.homographyanalyzer.R;
 
 import edu.uw.homographyanalyzer.global.GlobalLogger;
-import edu.uw.homographyanalyzer.tools.ImageSelectionStateListener;
 
 /**
  * Adapter used to cycle through images added to by client services
@@ -45,7 +43,7 @@ public class ImageSelectionAdapter extends BaseAdapter {
 	
 	private List<Bitmap> mBitMaps;
 	
-	private ImageSelectionStateListener mListener;
+//	private ImageSelectionStateListener mListener;
 	
 	//Default Search Image
 	private final Bitmap mPlaceHolder;
@@ -81,16 +79,16 @@ public class ImageSelectionAdapter extends BaseAdapter {
 	 * Will notify listener on set and at next change in transform capable state
 	 * @param listener null to clear otherwise listener for callback
 	 */
-	public void setImageSelectionStateListener(ImageSelectionStateListener listener) {
-		mListener = listener;
-		if (mListener == null) return;
-		
-		//Do initial notification
-		if (isReadyToTransform())
-			mListener.OnReadyToTransform();
-		else
-			mListener.OnNotReadyToTransform();
-	}
+//	public void setImageSelectionStateListener(ImageSelectionStateListener listener) {
+//		mListener = listener;
+//		if (mListener == null) return;
+//		
+//		//Do initial notification
+//		if (isReadyToTransform())
+//			mListener.OnReadyToTransform();
+//		else
+//			mListener.OnNotReadyToTransform();
+//	}
 	
 	@Override
 	public int getCount() {
@@ -157,11 +155,6 @@ public class ImageSelectionAdapter extends BaseAdapter {
 			mBitMaps.add(position, image);
 		}
 		
-		// If there are two initial images
-		// notify transform is ready
-		if (mBitMaps.size() >= 2 && mListener != null) 
-			mListener.OnReadyToTransform();
-		
 		notifyDataSetChanged();
 	}
 	
@@ -176,9 +169,6 @@ public class ImageSelectionAdapter extends BaseAdapter {
 		for (int i = 0 ; i < 2/*Default size*/; ++i) {
 			mBitMaps.add(mPlaceHolder);
 		}
-		
-		if (mListener != null)
-			mListener.OnNotReadyToTransform();
 	}
 	
 	/**

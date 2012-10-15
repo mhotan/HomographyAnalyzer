@@ -17,5 +17,6 @@
     <string name="show_exp_image">Larger View of Image</string>
     <string name="exp_image_description">This is a larger view of the selected thumbnail</string>
     <string name="transform">Transform</string>
+    <string name="threshhold_seekbar_label">Choose size of threshhold</string>
 
 </resources>

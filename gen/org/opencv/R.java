@@ -12,8 +12,10 @@ public final class R {
     }
     public static final class color {
         public static final int default_background=0x7f040000;
+        public static final int default_text_color=0x7f040001;
     }
     public static final class dimen {
+        public static final int default_text_size=0x7f050004;
         public static final int image_margin_from_border=0x7f050000;
         public static final int padding_large=0x7f050001;
         public static final int padding_medium=0x7f050002;
@@ -32,24 +34,28 @@ public final class R {
     }
     public static final class id {
         public static final int base_image_view=0x7f0a0001;
-        public static final int btnToggle=0x7f0a0012;
+        public static final int btnToggle=0x7f0a0016;
         public static final int button1=0x7f0a0000;
-        public static final int choose_picture_button=0x7f0a000f;
+        public static final int choose_picture_button=0x7f0a0013;
         public static final int content=0x7f0a0007;
         public static final int exp_image=0x7f0a000d;
         public static final int exp_image_text=0x7f0a000c;
+        public static final int features=0x7f0a000e;
         public static final int gallery=0x7f0a000a;
         public static final int gridview=0x7f0a0004;
         public static final int handle=0x7f0a0008;
+        public static final int homography_methods=0x7f0a000f;
         public static final int imageRetrieverButton=0x7f0a000b;
         public static final int imagegrid=0x7f0a0005;
         public static final int imgDisplay=0x7f0a0003;
-        public static final int imgView1=0x7f0a0010;
-        public static final int imgView2=0x7f0a0011;
-        public static final int menu_settings=0x7f0a0013;
+        public static final int imgView1=0x7f0a0014;
+        public static final int imgView2=0x7f0a0015;
+        public static final int menu_settings=0x7f0a0017;
         public static final int query_image_view=0x7f0a0002;
         public static final int slidingDrawer=0x7f0a0006;
-        public static final int take_picture_button=0x7f0a000e;
+        public static final int take_picture_button=0x7f0a0012;
+        public static final int threshhold_seekbar=0x7f0a0010;
+        public static final int threshold_seekbar=0x7f0a0011;
         public static final int transformButton=0x7f0a0009;
     }
     public static final class integer {
@@ -85,6 +91,7 @@ public final class R {
         public static final int select_intro=0x7f07000d;
         public static final int show_exp_image=0x7f07000e;
         public static final int slider_button=0x7f07000b;
+        public static final int threshhold_seekbar_label=0x7f070011;
         public static final int title_activity_homography=0x7f070003;
         public static final int title_activity_transform_result=0x7f07000c;
         public static final int transform=0x7f070010;

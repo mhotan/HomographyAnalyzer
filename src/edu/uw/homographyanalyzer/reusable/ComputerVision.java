@@ -79,10 +79,9 @@ public class ComputerVision {
 	 * featureDetector can be obtained from the FeatureDetector class
 	 * (eg. FeatureDetector.FAST)
 	 */
-	public MatOfKeyPoint findKeyPoints(int featureDetector, Mat source){
+	public synchronized MatOfKeyPoint findKeyPoints(FeatureDetector detector, Mat source){
 		MatOfKeyPoint result = new MatOfKeyPoint();	
-		FeatureDetector fd = FeatureDetector.create(featureDetector);
-		fd.detect(source, result);
+		detector.detect(source, result);
 		return result;
 	}
 	
@@ -91,13 +90,12 @@ public class ComputerVision {
 	 * x and y coordinates of the keypoints.  
 	 * 
 	 */
-	public Point[] convertMatOfKeyPointToPointArray(MatOfKeyPoint source){
+	public synchronized Point[] convertMatOfKeyPointToPointArray(MatOfKeyPoint source){
 		KeyPoint[] keyPointArray = source.toArray();
 		Point[] result = new Point[keyPointArray.length];
 		for(int i = 0 ; i < keyPointArray.length ; i++){
 			result[i] = keyPointArray[i].pt;
 		}
-		
 		return result;
 	}
 	
@@ -121,6 +119,26 @@ public class ComputerVision {
 		matOther = new MatOfPoint2f(otherPoints);
 		
 		result = Calib3d.findHomography(matReference, matOther, Calib3d.RANSAC, ransac_treshold);
+		
+		return result;
+	}
+	
+	/*
+	 * Given the reference points and the other keypoints
+	 * Returns the homography matrix to transform the other to be 
+	 * of the same perspective as the reference.
+	 * RANSAC method is used.
+	 */
+	public Mat findHomography(Point[] referenceKeyPoints, Point[] otherKeyPoints, int method,
+								int ransac_treshold){
+		// Intermediate data structures expected by the findHomography function
+		// provided by the library
+		MatOfPoint2f matReference, matOther;
+		Mat result;
+		matReference = new MatOfPoint2f(referenceKeyPoints);
+		matOther = new MatOfPoint2f(otherKeyPoints);
+		
+		result = Calib3d.findHomography(matReference, matOther, method, ransac_treshold);
 		
 		return result;
 	}
