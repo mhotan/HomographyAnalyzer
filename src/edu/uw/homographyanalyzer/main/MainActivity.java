@@ -169,6 +169,7 @@ ComputerVisionCallback, ImageStateTracker.ReadyToTransformListener, OnClickListe
 		}
 		
 		// Assign the view to change based on who sent the request
+		// There are two positions to the that can be found
 		int position = 0;
 		if (requestCode == BASE_IMAGE) {
 			position = ImageAdapter.POSITION_BASE;
@@ -176,7 +177,7 @@ ComputerVisionCallback, ImageStateTracker.ReadyToTransformListener, OnClickListe
 			position = ImageAdapter.POSITION_QUERY;
 		}
 		
-		//Check if file path or uri
+		//Check if file path or uri image source
 		String filePath = data.getExtras().getString(
 				BaseImageTaker.INTENT_RESULT_IMAGE_PATH);
 		if (filePath != null) {
@@ -275,7 +276,7 @@ ComputerVisionCallback, ImageStateTracker.ReadyToTransformListener, OnClickListe
 	}
 	
 	/**
-	 * Image adapter to 
+	 * Image adapter to show image contents stored on camera
 	 * @author mhotan
 	 */
 	private class ImageAdapter extends BaseAdapter {
@@ -428,16 +429,25 @@ ComputerVisionCallback, ImageStateTracker.ReadyToTransformListener, OnClickListe
 		}
 	}
 
+	/**
+	 * 
+	 */
 	@Override
 	public void OnReadyToTransform() {
 		transformButton.setEnabled(true);
 	}
 
+	/**
+	 * Adjust the User iterface to depict that it is not ready to transform
+	 */
 	@Override
 	public void OnNotReadyToTransform() {
 		transformButton.setEnabled(false);
 	}
 
+	/**
+	 *Starts new Activity to display Homography transformation
+	 */
 	@Override
 	public void onClick(View v) {
 		if (v.getId() == transformButton.getId()){

@@ -10,5 +10,7 @@
     <string name="query_img_descriptor">Image to be transformed to base image</string>
     <string name="image_grid">Image Grid</string>
     <string name="handle_label">Preferences</string>
+    <string name="drawer_descriptor">Sliding Drawer for finding homographies</string>
+    <string name="slider_button">Slide this button for preferences</string>
 
 </resources>

@@ -1,6 +1,6 @@
 package edu.uw.homographyanalyzer.reusable;
 
-/*
+/**
  * The main class that uses ComputerVision.java should implement this.
  * OpenCV on Android is implemented as a service, so there are
  * occasions when we need to know about the state of the service hook-up.
@@ -12,7 +12,6 @@ package edu.uw.homographyanalyzer.reusable;
  * prototype a lot.
  * 
  */
-
 public interface ComputerVisionCallback {
 	
 	/*
