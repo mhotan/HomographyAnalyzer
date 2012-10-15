@@ -35,6 +35,7 @@ public class ExternalApplication extends BaseImageTaker {
 
 	// Temporary place to store the captured image
 	private File mTemporaryFile;
+	private int mPosition;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

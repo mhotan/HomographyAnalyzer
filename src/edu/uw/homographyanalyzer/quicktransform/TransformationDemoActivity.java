@@ -158,24 +158,24 @@ public class TransformationDemoActivity extends Activity implements
 	public void onClick(View v) {
 		logd("onClick!");
 		// TODO Auto-generated method stub
-		switch (v.getId()) {
-		case R.id.btnTakeRef:
-			logd("btnTakeRef clicekd!");
-			TakeReferenceImage();
-			break;
-
-		case R.id.btnTakeImg:
-			logd("btnTakeImg clicekd!");
-			TakeOtherImage();
-			break;
-		}
+//		switch (v.getId()) {
+//		case R.id.btnTakeRef:
+//			logd("btnTakeRef clicekd!");
+//			TakeReferenceImage();
+//			break;
+//
+//		case R.id.btnTakeImg:
+//			logd("btnTakeImg clicekd!");
+//			TakeOtherImage();
+//			break;
+//		}
 
 	}
 
 	private void InitWidgets() {
 		logd("InitWidgets()");
-		btnTakeRefImg = (Button) findViewById(R.id.btnTakeRef);
-		btnTakeImg = (Button) findViewById(R.id.btnTakeImg);
+//		btnTakeRefImg = (Button) findViewById(R.id.btnTakeRef);
+//		btnTakeImg = (Button) findViewById(R.id.btnTakeImg);
 
 		
 		btnTakeRefImg.setOnClickListener(this);

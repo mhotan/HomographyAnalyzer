@@ -12,5 +12,10 @@
     <string name="handle_label">Preferences</string>
     <string name="drawer_descriptor">Sliding Drawer for finding homographies</string>
     <string name="slider_button">Slide this button for preferences</string>
+    <string name="title_activity_transform_result">TransformResultActivity</string>
+    <string name="select_intro">long-press a thumbnail to change the Image</string>
+    <string name="show_exp_image">Larger View of Image</string>
+    <string name="exp_image_description">This is a larger view of the selected thumbnail</string>
+    <string name="transform">Transform</string>
 
 </resources>

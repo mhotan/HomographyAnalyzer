@@ -1,34 +1,91 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical" >
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical" >
 
-        <Button
-            android:id="@+id/btnTakeRef"
-            android:layout_width="match_parent"
+        <TextView
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:padding="50dip"
-            android:text="Take Reference Image" />
+            android:gravity="center"
+            android:padding="5dp"
+            android:text="@string/select_intro"
+            android:textStyle="bold" />
 
-        <Button
-            android:id="@+id/btnTakeImg"
-            android:layout_width="match_parent"
+        <Gallery
+            android:id="@+id/gallery"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:padding="50dip"
-            android:text="Take Picture" 
-            android:layout_below="@+id/btnTakeRef"/>
-    </RelativeLayout>
+            android:orientation="horizontal" >
 
-    <ScrollView
-        android:id="@+id/scrollView1"
+            <ImageButton
+                android:id="@+id/imageRetrieverButton"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="fill_horizontal|center"
+                android:contentDescription="@string/query_img_descriptor"
+                android:src="@drawable/ic_action_search_dark"
+                android:text="@string/transform" />
+
+            <Button
+                android:id="@+id/transformButton"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_vertical"
+                android:text="@string/transform" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/exp_image_text"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/query_img_descriptor"
+            android:gravity="center"
+            android:padding="5dp"
+            android:text="@string/show_exp_image"
+            android:textStyle="italic" />
+
+        <ImageView
+            android:id="@+id/exp_image"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:contentDescription="@string/exp_image_description" />
+    </LinearLayout>
+
+    <SlidingDrawer
+        android:id="@+id/slidingDrawer"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="match_parent"
+        android:content="@+id/content"
+        android:handle="@+id/handle"
+        android:orientation="horizontal" >
 
-    </ScrollView>
+        <ImageButton
+            android:id="@+id/handle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/slider_button"
+            android:src="@drawable/navigation_previous_item"
+            android:text="@string/handle_label" />
 
-</LinearLayout>
+        <LinearLayout
+            android:id="@+id/content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/default_background"
+            android:contentDescription="@string/drawer_descriptor"
+            android:orientation="horizontal" >
+        </LinearLayout>
+    </SlidingDrawer>
+
+</FrameLayout>

@@ -1,6 +1,8 @@
 package edu.uw.homographyanalyzer.main;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,18 +12,21 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.Button;
+import android.widget.Gallery;
 import android.widget.GridView;
-import android.widget.ImageView;
+import android.widget.ImageButton;
 import android.widget.SlidingDrawer;
 import android.widget.Toast;
 
@@ -31,10 +36,9 @@ import edu.uw.homographyanalyzer.camera.BaseImageTaker;
 import edu.uw.homographyanalyzer.camera.ExternalApplication;
 import edu.uw.homographyanalyzer.global.GlobalLogger;
 import edu.uw.homographyanalyzer.global.LoggerInterface;
-import edu.uw.homographyanalyzer.quicktransform.TransformationDemoActivity;
 import edu.uw.homographyanalyzer.reusable.ComputerVision;
 import edu.uw.homographyanalyzer.reusable.ComputerVisionCallback;
-import edu.uw.homographyanalyzer.tools.ImageStateTracker;
+import edu.uw.homographyanalyzer.tools.ImageSelectionStateListener;
 
 /*
  * Sample Activity meant to demonstrate how to use the implemented
@@ -89,8 +93,10 @@ import edu.uw.homographyanalyzer.tools.ImageStateTracker;
  *   				feature points connect the 2 images.
  */
 public class MainActivity extends Activity implements LoggerInterface,
-ComputerVisionCallback, ImageStateTracker.ReadyToTransformListener, OnClickListener {
+ComputerVisionCallback, ImageSelectionStateListener, OnClickListener {
 
+	private final Context This = this;
+	
 	// Logging tag
 	private static final String TAG = "HomographyAnalyzer";
 	// CV library ready to be used
@@ -101,27 +107,32 @@ ComputerVisionCallback, ImageStateTracker.ReadyToTransformListener, OnClickListe
 	private static final int BASE_IMAGE = ++CNTR;
 	private static final int QUERY_IMAGE = ++CNTR;
 	
+	public static final String EXTRA_POSITION = TAG + "_POSITION";
+	
 	public static final String BASE_URI_EXTRA = TAG + "BASE_URI";
 	public static final String QUERY_URI_EXTRA = TAG + "QUERY_URI";
 	
 	// Context of this for inner class use
 	private Context mContext;
 	
-	//image tracker to track what image are currently available for transform
-	private ImageStateTracker imageTracker;
-	
 	// adapter to display images
-	private ImageAdapter mImageAdapter;
+	private ImageSelectionAdapter mImageAdapter;
 	
+	// if equal 0 or 1 then represent reference and new image respectively
+	// if OTHER_IMG_SELECT then other image is selected
+	private static int OTHER_IMG_SELECT = -1;
+	
+	//Thumbnails of homography images
+	private Gallery mGallery;
 	//UI elements
-	SlidingDrawer drawer;
-	Button transformButton;
-	//TODO fix this for set Alpha in slider to support lower APis
-	@TargetApi(11)
+	private SlidingDrawer drawer;
+	private Button transformButton;
+	private ImageButton searchButton;
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.image_selector);
+		setContentView(R.layout.main);
 		mContext = this;
 		// This needs to be done first because many other components
 		// depend on this global logger
@@ -129,21 +140,59 @@ ComputerVisionCallback, ImageStateTracker.ReadyToTransformListener, OnClickListe
 		ComputerVision cv = new ComputerVision(this, this, this);
 		cv.initializeService();
 		
-		imageTracker = new ImageStateTracker();
-		imageTracker.setOnReadyToTransformListener(this);
-		
 		transformButton = (Button) findViewById(R.id.transformButton);
 		transformButton.setOnClickListener(this);
-		
-		GridView gridview = (GridView) findViewById(R.id.imagegrid);
-		mImageAdapter = new ImageAdapter(this);
-		gridview.setAdapter(mImageAdapter);
-		
-		//Make sure proper reaction are made per item select
-		gridview.setOnItemClickListener(new ItemSelectListener());
+			
+		searchButton = (ImageButton) findViewById(R.id.imageRetrieverButton);
+		searchButton.setOnClickListener(this);
 		
 		drawer = (SlidingDrawer) findViewById(R.id.slidingDrawer);
-		drawer.setAlpha(1); // Make opaque
+		
+		// Adpater for managing images to be displayed in gallery
+		mImageAdapter = new ImageSelectionAdapter(this);
+		mImageAdapter.setImageSelectionStateListener(this);
+		// Gallery for displaying images
+		mGallery = (Gallery) findViewById(R.id.gallery);
+		mGallery.setAdapter(mImageAdapter);
+		
+		mGallery.setOnItemLongClickListener(new OnItemLongClickListener() {
+
+			@Override
+			public boolean onItemLongClick(AdapterView<?> listView, View view,
+					int position, long id) {
+				
+				int selectPosition;
+				
+				switch (position) {
+				case 0:
+				case 1:
+					selectPosition = position;
+					break;
+				default: // Non reference image selected
+					selectPosition = OTHER_IMG_SELECT;
+				}
+				
+//				CharSequence message = "position:" + selectPosition;
+//				Toast toast = Toast.makeText(This, message, Toast.LENGTH_SHORT);
+//				toast.show();
+//				Log.i(TAG, message.toString());
+				
+				// If the image has already been selected 
+				// this requires another mechanism to search for images
+				if (!mImageAdapter.isDefaultImage(selectPosition)){
+					searchButton.setEnabled(true);
+					searchButton.setVisibility(ImageButton.VISIBLE);
+				} else {
+					searchButton.setEnabled(false);
+					searchButton.setVisibility(ImageButton.INVISIBLE);
+					
+					// If default image => Search needs to occur
+					getImageForPosition(selectPosition);
+				}
+				return false;
+			}
+		});
+			
 	}
 	
 	/**
@@ -151,9 +200,10 @@ ComputerVisionCallback, ImageStateTracker.ReadyToTransformListener, OnClickListe
 	 * Img address is set to 
 	 * @param id
 	 */
-	private void getImageForID(int id){
-		logd("Calling camera intent"); Intent i = new Intent(this,
-				ExternalApplication.class); startActivityForResult(i, id);
+	private void getImageForPosition(int pos){
+		logd("Calling camera intent"); 
+		Intent i = new Intent(this, ExternalApplication.class); 
+		startActivityForResult(i, pos);
 	} 
 
 	// Called when a started intent returns
@@ -161,7 +211,7 @@ ComputerVisionCallback, ImageStateTracker.ReadyToTransformListener, OnClickListe
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 		
-		String message;
+		String message = null;
 		if (resultCode != RESULT_OK) {
 			Toast t = Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT);
 			t.show();
@@ -170,26 +220,41 @@ ComputerVisionCallback, ImageStateTracker.ReadyToTransformListener, OnClickListe
 		
 		// Assign the view to change based on who sent the request
 		// There are two positions to the that can be found
-		int position = 0;
-		if (requestCode == BASE_IMAGE) {
-			position = ImageAdapter.POSITION_BASE;
-		} else if (requestCode == QUERY_IMAGE) {
-			position = ImageAdapter.POSITION_QUERY;
-		}
+		int position = requestCode;
+		
+		String imgIdentity = position == 0 
+				? "Base Image" : "Other Image";
 		
 		//Check if file path or uri image source
 		String filePath = data.getExtras().getString(
 				BaseImageTaker.INTENT_RESULT_IMAGE_PATH);
+		
+		// Depending on how image was obtained,
+		// obtain a Bitmap image of object
+		Bitmap image = null;
 		if (filePath != null) {
-			message = "Base Image : Bitmap OKAY: " + filePath;
-			mImageAdapter.changeImage(filePath, position);
+			message = imgIdentity + " Found! file: " + filePath;
+			image = BitmapFactory.decodeFile(filePath);
 		} else {
 			Uri uri = data.getExtras().getParcelable(
 					BaseImageTaker.INTENT_RESULT_IMAGE_URI);
-			message = "Base Image : Bitmap OKAY: " + uri.getPath();
-//			ViewToChange.setImageURI(uri);
-			mImageAdapter.changeImage(uri, position);
+//			message = imgIdentity + " Found! URI: " + uri.getPath();
+//			image = BitmapFactory.decodeFile(uri.getPath());
+			try {
+				image = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+			} catch (FileNotFoundException e) {
+				Log.e(TAG, "URI returned by image retreiver not found");
+			} catch (IOException e) {
+				Log.e(TAG, "IO Exception: " +e);
+			}
 		}
+		
+		if (image == null){
+			message = "Null image cannot display";
+			Log.e(TAG, message);
+			return;
+		} else
+			mImageAdapter.setImage(image, position);
 		
 		Toast t = Toast.makeText(this, message, Toast.LENGTH_SHORT);
 		t.show();
@@ -215,13 +280,13 @@ ComputerVisionCallback, ImageStateTracker.ReadyToTransformListener, OnClickListe
 	public void onInitServiceFinished() {
 		// TODO Auto-generated method stub
 		logd("onInitServiceFinished()");
+		mCVLibraryInitialized = true;
 	}
 
 	@Override
 	public void onInitServiceFailed() {
 		// TODO Auto-generated method stub
 		logd("onInitServiceFailed()");
-		mCVLibraryInitialized = true;
 	}
 
 	@Override
@@ -247,194 +312,14 @@ ComputerVisionCallback, ImageStateTracker.ReadyToTransformListener, OnClickListe
 		// TODO Auto-generated method stub
 
 	}
-	
-	
-	/**
-	 * 
-	 * @author mhotan
-	 *
-	 */
-	private class ItemSelectListener implements AdapterView.OnItemClickListener {
-
-		@Override
-		public void onItemClick(AdapterView<?> parent, View v, int position,
-				long id) {
-			//This indicates the user wants to change the image before producing the transform
-			switch (position) {
-			case 0:
-				getImageForID(BASE_IMAGE);
-				break;
-			case 1:
-				getImageForID(QUERY_IMAGE);
-				break;
-			default:
-				Toast t = Toast.makeText(mContext, "Illegal position selected", Toast.LENGTH_SHORT);
-				t.show();
-			}
-		}
-		
-	}
-	
-	/**
-	 * Image adapter to show image contents stored on camera
-	 * @author mhotan
-	 */
-	private class ImageAdapter extends BaseAdapter {
-		private Context mContext;
-		public static final int POSITION_BASE = 0;
-		public static final int POSITION_QUERY = 1;
-		HashMap<Integer, ImageView> toShowMap;
-		HashMap<Integer, Uri> uriMap;
-		
-		public ImageAdapter(Context c) {
-			mContext = c;
-			toShowMap =  new HashMap<Integer, ImageView>();
-			uriMap = new HashMap<Integer, Uri>();
-			resetShowingIDs();
-		}
-
-		/**
-		 * Resets the image thumbnails to show the search button
-		 */
-		private void resetShowingIDs(){
-			for (int i = 0 ; i < toShowIDs.length; ++i) {
-				toShowIDs[i] = mSearchThumbIDs[i];
-			}
-			toShowMap.put(POSITION_BASE, null);
-			toShowMap.put(POSITION_QUERY, null);
-			uriMap.put(POSITION_BASE, null);
-			uriMap.put(POSITION_QUERY, null);
-			
-			if (imageTracker == null) return;
-			imageTracker.setFirstImageIsLoaded(false);
-			imageTracker.setSecondImageIsLoaded(false);
-		}
-		
-		@Override
-		public int getCount() {
-			return mSearchThumbIDs.length;
-		}
-
-		@Override
-		public Object getItem(int position) {
-			return null;
-		}
-
-		@Override
-		public long getItemId(int position) {
-			if (position >= toShowIDs.length || position < 0)
-				return -1;
-			return toShowIDs[position];
-		}
-
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			
-			boolean createNewImageView = false;
-			ImageView imageView = null;
-			if (position == POSITION_BASE) {
-				ImageView base = toShowMap.get(POSITION_BASE);
-				if (base == null) 
-					createNewImageView = true;
-				else 
-					imageView = base;
-			} else if (position == POSITION_QUERY) {
-				ImageView query = toShowMap.get(POSITION_QUERY);
-				if (query == null) 
-					createNewImageView = true;
-				else
-					imageView = query;
-			} else {
-				Toast t = Toast.makeText(mContext, "Illegal view selected", Toast.LENGTH_SHORT);
-				t.show();
-			}
-			
-			if (createNewImageView){
-				if (convertView == null) {  // if it's not recycled, initialize some attributes
-					imageView = new ImageView(mContext);
-					imageView.setLayoutParams(new GridView.LayoutParams(85, 85));
-					imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-					imageView.setPadding(8, 8, 8, 8);
-				} else {
-					imageView = (ImageView) convertView;
-				}
-				imageView.setImageResource(toShowIDs[position]);
-			}
-	        return imageView;
-		}
-		
-		/**
-		 * Changes image to image stored at uri
-		 * if position is not recognized everything is reset
-		 * @param uri stores image
-		 * @param position either POSTION_BASE or POSITION_QUERY
-		 */
-		public void changeImage(Uri uri, int position){
-			ImageView imageView = new ImageView(mContext);
-			imageView.setLayoutParams(new GridView.LayoutParams(
-					ViewGroup.LayoutParams.MATCH_PARENT,
-					ViewGroup.LayoutParams.MATCH_PARENT));
-			imageView.setScaleType(ImageView.ScaleType.CENTER);
-			imageView.setPadding(8, 8, 8, 8);
-			
-			if (position == POSITION_BASE ||
-					position == POSITION_QUERY && 
-					uri != null) {
-				imageView.setImageURI(uri);
-				
-				toShowMap.put(position, imageView);
-				// Store the uris
-				uriMap.put(position, uri);
-				
-				//Update the tracker
-				if (position == POSITION_BASE)
-					imageTracker.setFirstImageIsLoaded(true);
-				else 
-					imageTracker.setSecondImageIsLoaded(true);
-				
-				// Update the GUI
-				notifyDataSetChanged();
-			} else // Do nothing if position is wrong
-				imageView = null;
-			
-		}
-		
-		/**
-		 * Changes image to image stored at filePath
-		 * @param filePath stores image
-		 * @param position either POSTION_BASE or POSITION_QUERY
-		 */
-		public void changeImage(String filePath, int position){
-			File imgFile = new File(filePath);
-			changeImage(Uri.fromFile(imgFile), position);
-		}
-		
-		private Integer[] toShowIDs = new Integer[2];
-		
-		private Integer[] mSearchThumbIDs = {R.drawable.ic_action_search_dark, 
-				R.drawable.ic_action_search_dark};
-
-		/**
-		 * 
-		 * @return arraylist of base and query image uri with base first position
-		 * 		return null on failure
-		 */
-		public List<Uri> getUris() {
-			ArrayList<Uri> list = new ArrayList<Uri>();
-			list.add(uriMap.get(POSITION_QUERY));
-			list.add(0, uriMap.get(POSITION_BASE));
-			if (list.size() != 2)
-				return null;
-			return Collections.unmodifiableList(list);
-		}
-	}
 
 	/**
 	 * 
 	 */
 	@Override
 	public void OnReadyToTransform() {
-		transformButton.setEnabled(true);
+		boolean ready = mCVLibraryInitialized;
+		transformButton.setEnabled(ready);
 	}
 
 	/**
@@ -452,16 +337,19 @@ ComputerVisionCallback, ImageStateTracker.ReadyToTransformListener, OnClickListe
 	public void onClick(View v) {
 		if (v.getId() == transformButton.getId()){
 			//preform transformation
-			List<Uri> uris = mImageAdapter.getUris();
-			if (uris != null) {
-				Uri base = uris.get(0);
-				Uri query = uris.get(1);
-				
-				Intent i = new Intent(this, TransformationDemoActivity.class);
-				i.putExtra(BASE_URI_EXTRA, base);
-				i.putExtra(QUERY_URI_EXTRA, query);
-				startActivity(i);
-			}
+//			List<Uri> uris = mImageAdapter.getUris();
+//			if (uris != null) {
+//				Uri base = uris.get(0);
+//				Uri query = uris.get(1);
+//				
+//				Intent i = new Intent(this, TransformationDemoActivity.class);
+//				i.putExtra(BASE_URI_EXTRA, base);
+//				i.putExtra(QUERY_URI_EXTRA, query);
+//				startActivity(i);
+//			}
+		
+			// Start transformation process
+			
 		}
 	}
 	
