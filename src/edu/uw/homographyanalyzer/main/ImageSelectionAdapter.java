@@ -1,6 +1,7 @@
 package edu.uw.homographyanalyzer.main;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -56,10 +57,7 @@ public class ImageSelectionAdapter extends BaseAdapter {
 	 * @param galleryContext Context that contains gallery of images
 	 */
 	public ImageSelectionAdapter(Context galleryContext) {
-		mContext = galleryContext;
-//		toShowMap =  new HashMap<Integer, ImageView>();
-//		uriMap = new HashMap<Integer, Uri>();
-		
+		mContext = galleryContext;	
 		mBitMaps = new ArrayList<Bitmap>(2);
 		mPlaceHolder = BitmapFactory.decodeResource(mContext.getResources(), default_search_id);
 		
@@ -74,21 +72,7 @@ public class ImageSelectionAdapter extends BaseAdapter {
 		// Add default images
 		reset();
 	}
-	
-	/**
-	 * Will notify listener on set and at next change in transform capable state
-	 * @param listener null to clear otherwise listener for callback
-	 */
-//	public void setImageSelectionStateListener(ImageSelectionStateListener listener) {
-//		mListener = listener;
-//		if (mListener == null) return;
-//		
-//		//Do initial notification
-//		if (isReadyToTransform())
-//			mListener.OnReadyToTransform();
-//		else
-//			mListener.OnNotReadyToTransform();
-//	}
+
 	
 	@Override
 	public int getCount() {
@@ -136,11 +120,20 @@ public class ImageSelectionAdapter extends BaseAdapter {
 	 * @param position position to show image at
 	 */
 	public void setImage(Bitmap image, int position) {
+		setImageWithoutNotif(image, position);
+		notifyDataSetChanged();
+	}
+	
+	/**
+	 * Adds with notifying any owning view
+	 * @param image
+	 * @param position
+	 */
+	private void setImageWithoutNotif(Bitmap image, int position){
 		if (image == null){
 			GlobalLogger.getInstance().loge(TAG + "[setImage] NULL Image attempted");
 			return;
 		}
-		
 		// Because default size of images is 2 it possible to remove and 
 		// replace image
 		// If position requested is outside of bounds then append to end
@@ -154,19 +147,31 @@ public class ImageSelectionAdapter extends BaseAdapter {
 			mBitMaps.remove(position);
 			mBitMaps.add(position, image);
 		}
-		
-		notifyDataSetChanged();
 	}
 	
+	/**
+	 * Appends image to the end
+	 * @param image
+	 */
 	public void addImageToEnd(Bitmap image){
 		setImage(image, mBitMaps.size());
 	}
 	
 	/**
+	 * Appends image to the end
+	 * @param image
+	 */
+	public void addAllImagesToEnd(List<Bitmap> images){
+		for (int i = 0; i < images.size(); ++i)
+			setImageWithoutNotif(images.get(i), mBitMaps.size());
+		notifyDataSetChanged();
+	}
+	
+	/**
 	 * Resets the image thumbnails to show the search button
 	 */
-	private void reset(){
-		//
+	protected void reset(){
+		// Reset image to look 
 		mBitMaps.clear();
 		
 		// The first two images set to search boxes
@@ -174,16 +179,6 @@ public class ImageSelectionAdapter extends BaseAdapter {
 			mBitMaps.add(mPlaceHolder);
 		}
 	}
-	
-//	/**
-//	 * 
-//	 * @return if there are two valid images to transform
-//	 */
-//	public boolean isReadyToTransform(){
-//		// If the first two images are not the basic search image
-//		boolean ready = !isDefaultImage(0) && !isDefaultImage(1);
-//		return ready;
-//	}
 	
 	public boolean isDefaultImage(int pos){
 		if (pos < 0 || pos >= mBitMaps.size())

@@ -21,6 +21,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.util.Pair;
 import android.view.Menu;
 import android.view.TextureView;
 import android.view.View;
@@ -116,21 +117,12 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 	// CV library ready to be used
 	private boolean mCVLibraryInitialized = false;
 
-	// For on activity result references
-	private static int CNTR = 0;
-	private static final int BASE_IMAGE = ++CNTR;
-	private static final int QUERY_IMAGE = ++CNTR;
-
 	public static final String EXTRA_POSITION = TAG + "_POSITION";
-
 	public static final String BASE_URI_EXTRA = TAG + "BASE_URI";
 	public static final String QUERY_URI_EXTRA = TAG + "QUERY_URI";
 
-	// Context of this for inner class use
-	private Context mContext;
-
 	// adapter to display images
-	private ImageSelectionAdapter mImageAdapter;
+	private OrganizedImageSelectionAdapter mImageAdapter;
 
 	// if equal 0 or 1 then represent reference and new image respectively
 	// if OTHER_IMG_SELECT then other image is selected
@@ -197,7 +189,7 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 		drawer = (SlidingDrawer) findViewById(R.id.slidingDrawer);
 
 		// Adpater for managing images to be displayed in gallery
-		mImageAdapter = new ImageSelectionAdapter(this);
+		mImageAdapter = new OrganizedImageSelectionAdapter(this);
 		
 		// Gallery for displaying images
 		mGallery = (Gallery) findViewById(R.id.gallery);
@@ -463,7 +455,11 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 			
 			// Remove all but the two base imagess
 			
-			List<Bitmap> imagesToAdd = tranBuilder.getWarpedImages();
+			Pair<Bitmap, Bitmap> imagesToAdd = tranBuilder.getWarpedImages();
+			if (imagesToAdd == null){
+				//Notify User
+				
+			}
 			
 			// Add images to adapter
 			for (Bitmap b : imagesToAdd){
