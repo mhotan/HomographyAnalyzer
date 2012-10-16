@@ -1,21 +1,30 @@
 package edu.uw.homographyanalyzer.reusable;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import org.opencv.android.Utils;
 import org.opencv.calib3d.Calib3d;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.features2d.FeatureDetector;
+import org.opencv.features2d.KeyPoint;
 import org.opencv.imgproc.Imgproc;
 import edu.uw.homographyanalyzer.quicktransform.Data;
+import edu.uw.homographyanalyzer.quicktransform.TransformInfo;
 
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
+import android.provider.CalendarContract.Attendees;
 import android.util.Log;
 import android.util.Pair;
 
@@ -27,7 +36,7 @@ import android.util.Pair;
 public class TransformationBuilder {
 
 	private static final String TAG = "HomographyBuilder";
-	
+
 	public static final int RANSAC_THRESHHOLD_MAX = 10;
 	private static final Pair<Integer, Integer> RANSAC_RANGE = 
 			new Pair<Integer, Integer>(1, RANSAC_THRESHHOLD_MAX);
@@ -35,147 +44,142 @@ public class TransformationBuilder {
 	// Computer vision object to
 	private ComputerVision mCV;
 
-	// key Points
-	private Point[] refKeyPoints = null;
-	private Point[] otherKeyPoints = null;
-
-	// Feature processors per image
-	private FeatureProcessor refProcessor;
-	private FeatureProcessor otherProcessor;
+	// Asyncronous homography producer 
+	private AsyncHomographyProcessor homographyProcesser;
+	private AsyncFeatureDetector mRefFeatureDetector;
+	private AsyncFeatureDetector mOtherFeatureDetector;
 	
-	TransformationStateListener mlistener;
+	//Listeners that listens for state changes 
+	private TransformationStateListener mlistener;
+	
+	// Storage of Tranformation information
+	TransformInfo storage;
 
 	///////////////////////////////////////////////////////////////////
 	// Vairables for build process
 
-	//Images to warp between
-	private Bitmap mReferenceBitmap, mOtherBitmap;
+	private Bitmap mReferenceImage, mOtherImage;
 	
-	//Following are user defined variables that can be changed
-	private FeatureDetector mFeatureDetectorRef;
-	private FeatureDetector mFeatureDetectorOther;
-	
-	//Name of feature detection type
+	//Name of feature detection type to use
 	private String mFeatureDetectorName = null;
-	
-	//Name of homography method
+
+	//Name of homography method to use
+	// just store the name that way a feature detector can be created per thread
 	private String mHomographyMethod = null;
-	
-	private int ransacThreshhold;
-	
+
+	// threshold for feature matching
+	private int mRansacThreshhold;
+
 	///////////////////////////////////////////////////////////////////
 	// Constructor
 
+	/**
+	 * Creates instance
+	 * @param cv fully initialized Computer Vision instance
+	 */
 	public TransformationBuilder(ComputerVision cv){
 		if (cv == null)
 			throw new IllegalArgumentException("ComputerVision not instantiated");
+		// Instantiated vision
 		mCV = cv;
-
+		storage = new TransformInfo();
 		// Initialize feature detector to default
-		setFeatureDetector(SIFT);
-		
+		setFeatureDetector(FAST);
 		//Initialize Homography to default
 		setHomograhyMethod(RANSAC);
-		ransacThreshhold = 1;
-		
-		refProcessor = new FeatureProcessor(mReferenceBitmap, mFeatureDetectorRef);
-		otherProcessor = new FeatureProcessor(mOtherBitmap, mFeatureDetectorOther);
+		setRansacThreshhold(1);
 	}
+
 	
 	public void setTransformationStateListener(TransformationStateListener listener){
 		mlistener = listener;
+		updateListeners(storage);
 	}
-	
+
 	/**
 	 * Attempts to build transformation if possible
 	 * @return null if couldnt build or Data other wise
 	 */
-	public Data build(){
-		if (refKeyPoints == null || 
-				otherKeyPoints == null) {
-			return null;
-		}
+	public boolean getWarpedImages(TransformInfo info){
+		if (!info.isComplete()) return false;
 		
-		//Find Homography Matrix
-		Mat homography = mCV.findHomography(refKeyPoints, otherKeyPoints, getCurrentMethod(), ransacThreshhold);
+		// Check if storage has a complete homography
+		Mat homography = info.getHomographyMatrix() ;
 		
 		// Do a transformation with non inverted map
-		Mat refMat = new Mat();
-		Utils.bitmapToMat(mReferenceBitmap, refMat);
-		Size sz = refMat.size();
-		Mat result = new Mat(sz, refMat.type());
-		Imgproc.warpPerspective(refMat, result, homography, sz);
+		Mat refMat = info.getReferenceMatrix();
+		
+		Mat result = ComputerVision.getWarpedImage(refMat, homography, false);
 		Bitmap disp = Bitmap.createBitmap(result.cols(), result.rows(),
-				mReferenceBitmap.getConfig());
+				Bitmap.Config.ARGB_8888); // Android uses ARGB_8888
 		Utils.matToBitmap(result, disp);
-	
-		// Do a transformation with inverted map
-		Mat refMatInv = new Mat();
-		Utils.bitmapToMat(mReferenceBitmap, refMatInv);
-		Size szInv = refMatInv.size();
-		Mat resultInv = new Mat(szInv, refMatInv.type());
-		Imgproc.warpPerspective(refMatInv, resultInv, homography, szInv, Imgproc.WARP_INVERSE_MAP);
+
+		Mat resultInv = ComputerVision.getWarpedImage(refMat, homography, true);
 		Bitmap dispInv = Bitmap.createBitmap(resultInv.cols(), result.rows(),
-				mReferenceBitmap.getConfig());
+				Bitmap.Config.ARGB_8888); // Android uses ARGB_8888
 		Utils.matToBitmap(resultInv, dispInv);
 
-		Data data = new Data();
-		data.addBitMap(disp);
-		data.addBitMap(dispInv);
-		return data;
+		info.addBitmap(disp);
+		info.addBitmap(dispInv);
+		return true;
 	}
-	
+
 	///////////////////////////////////////////////////////////////////
 	// Homography 
-	
+
 	public String getCurrentHomographyMethod(){
 		return mHomographyMethod;
 	}
-	
-	private int getCurrentMethod(){
+
+	private int getHomographyCode(){
 		return mHomographyMethods.get(mHomographyMethod);
 	}
-	
+
 	/**
 	 * Sets the homography method to use
 	 * @param method name of method
 	 */
 	public void setHomograhyMethod(String method){
-		if (mHomographyMethod == null 
-				|| !mHomographyMethod.equals(method)
-				&& mHomographyMethods.containsKey(method)){
-			mHomographyMethod = method;
-			updateListeners();
+		// method is null or not in library exit
+		if (method == null || !mHomographyMethods.containsKey(method)){
+			Log.e(TAG, "Illegal Homography method: " + method);
+			return;
 		}
+
+		// If initial or new method
+		if (mHomographyMethod == null 
+				|| !mHomographyMethod.equals(method)){
+			mHomographyMethod = method;
+			Log.i(TAG, "Set Homography Method set: " + mHomographyMethod);
+			//TODO Update Build
+		} 
 	}
-	
+
 	/**
-	 * Sets threshold
+	 * Sets the threshold to input value if the value falls in between 
+	 * 1 < max threshold value		
 	 * @param threshhold
 	 */
-	public void setRansacThreshold(int threshhold){
-		if (threshhold == ransacThreshhold) return;
-		int min = RANSAC_RANGE.first;
-		int max = RANSAC_RANGE.second;
-		int thresh = Math.max(min, threshhold);
-		thresh = Math.min(max, thresh);
-		ransacThreshhold = thresh;
-		updateListeners();
+	public void setRansacThreshhold(int threshhold){
+		mRansacThreshhold = Math.max(RANSAC_RANGE.first, //It is at least min value
+				Math.min(RANSAC_RANGE.second, threshhold)); // atmost max value
+		Log.i(TAG, "Ransac threshhold set: " + mRansacThreshhold);
+		//TODO update build
 	}
-	
+
 	/**
 	 * @return set of all available method of homographies
 	 */
 	public static Set<String> getHomographyMethodNames(){
 		return Collections.unmodifiableSet(mHomographyMethods.keySet());
 	} 
-	
-	private static final String RANSAC = "RANSAC";
-	private static final String REGULAR = "ALL POINTS";
-	private static final String LMEDS = "LEAST MEDIAN";
-	
+
+	public static final String RANSAC = "RANSAC";
+	public static final String REGULAR = "ALL POINTS";
+	public static final String LMEDS = "LEAST MEDIAN";
+
 	private static final HashMap<String, Integer> mHomographyMethods = new HashMap<String, Integer>();
-	
+
 	static{
 		mHomographyMethods.put(RANSAC, Calib3d.RANSAC);
 		mHomographyMethods.put(LMEDS, Calib3d.LMEDS);
@@ -190,8 +194,7 @@ public class TransformationBuilder {
 	 * @param image Bitmap image to be reference
 	 */
 	public void setReferenceImage(Bitmap image){
-		if (image == mReferenceBitmap) return;
-		refKeyPoints = null;
+		if (image == mReferenceImage) return;
 		setImagePrivate(image, REF_IMG);
 	}
 
@@ -200,104 +203,193 @@ public class TransformationBuilder {
 	 * @param image Bitmap image to be other
 	 */
 	public void setOtherImage(Bitmap image){
-		if (image == mOtherBitmap) return;
-		otherKeyPoints = null;
+		if (image == mOtherImage) return;
 		setImagePrivate(image, OTHER_IMG);
 	}
 
 	private static final int REF_IMG = 0;
 	private static final int OTHER_IMG = 1;
 
+	/**
+	 * Note that Large BitMap will cause out of memory errors
+	 * This 
+	 * @param image 
+	 * @param which
+	 */
 	private void setImagePrivate(Bitmap image, int which){
 		if (image == null)
 			throw new IllegalArgumentException("NULL image");
 
+		Mat imgMat = new Mat();
 		// cancel any asynchronous process before we starrt a new one
 		switch (which){
 		case REF_IMG:
-			mReferenceBitmap = image;
-			refProcessor.cancel(false);
-			refProcessor = null;
-			refProcessor = new FeatureProcessor(mReferenceBitmap, mFeatureDetectorRef);
-			refProcessor.execute();
+			mReferenceImage = image;
+			Utils.bitmapToMat(mReferenceImage, imgMat);
+
+			// Cancel any feature finding thread
+			if (mRefFeatureDetector != null){
+				mRefFeatureDetector.cancel(true);
+				mRefFeatureDetector = null;
+			} // Start new feature detector
+			mRefFeatureDetector = new AsyncFeatureDetector(imgMat, REF_IMG);
+			mRefFeatureDetector.execute();
 			break;
 		case OTHER_IMG:
-			mOtherBitmap = image;
-			otherProcessor.cancel(false);
-			otherProcessor = null;
-			otherProcessor = new FeatureProcessor(mOtherBitmap, mFeatureDetectorOther);
-			otherProcessor.execute();
+			mOtherImage = image;
+			Utils.bitmapToMat(mOtherImage, imgMat);
+			
+			// Cancel any feature finding thread
+			if (mOtherFeatureDetector != null){
+				mOtherFeatureDetector.cancel(true);
+				mOtherFeatureDetector = null;
+			} // Start new feature detector
+			mOtherFeatureDetector = new AsyncFeatureDetector(imgMat, OTHER_IMG);
+			mOtherFeatureDetector.execute();
 			break;			
+		}
+		
+		// We know that one of the images must have changed threrefore we need 
+		// to reset the storage of the transform and start from scratch
+		attemptToBuild();
+	}
+	
+	/**
+	 * calls asynchronous method to process Images
+	 */
+	private void attemptToBuild(){
+		if (storage.hasBothImages()){
+			//Cancel any current running processes
+			if (homographyProcesser != null){
+				homographyProcesser.cancel(false);
+				homographyProcesser = null;
+			}
+			homographyProcesser = new AsyncHomographyProcessor(storage);
+			homographyProcesser.execute();
 		}
 	}
 
 	///////////////////////////////////////////////////////////////////
 	// Image Processing
-
+	
 	/**
-	 * Assign Corresponding Point[] depending on BitMap image passed in
+	 * Runs feature detection in the background for specific image
 	 * @author mhotan
 	 */
-	private class FeatureProcessor extends AsyncTask<Void, Void, Point[]>{
+	private class AsyncFeatureDetector extends AsyncTask<Void, Void, KeyPoint[]>{
 
-		//Bitmap image to process for features
-		private Bitmap image;
-
-		// Feature detector to use
-		private FeatureDetector fDetector;
-
-		// Feature detector to use
-		private Point[] keyPoints;
-
-		public FeatureProcessor(Bitmap image, FeatureDetector detector){
-			setImage(image, detector);
+		private FeatureDetector mFd;
+		private int mWhichImg;
+		private Mat mImg;
+		
+		public AsyncFeatureDetector(Mat img, int whichImg){
+			// Create new instances of thesse object to be run in background thread
+			mFd = getCurrentFeatureDetector();
+			mImg = img.clone();
+			mWhichImg = whichImg;
 		}
+		
+		@Override
+		protected KeyPoint[] doInBackground(Void... params) {
+			return mCV.findKeyPoints(mFd, mImg).toArray();
+		}
+		//Runs on main thread
+		@Override
+		protected void onPostExecute(KeyPoint[] result){
+			
+			if (mWhichImg == REF_IMG){
+				storage.setReferenceImage(mImg, result);
+				mlistener.OnKeypointsFoundForReference(storage.getReferenceMatrix());
+				// because image changed must attempt to build again
+				attemptToBuild();
+			} else if (mWhichImg == OTHER_IMG) {
+				storage.setOtherImage(mImg, result);
+				mlistener.OnKeypointsFoundForOther(storage.getOtherMatrix());
+				// because image changed must attempt to build again
+				attemptToBuild();
+			}
+		}
+		
+	}
 
-		public void setImage(Bitmap image, FeatureDetector detector ){
-			this.image =image;
-			fDetector = detector;
-			// feature detector for specific image
-			// Reference key points per image
-			if (image == mReferenceBitmap){
-				fDetector = mFeatureDetectorRef;
-				keyPoints = refKeyPoints;
-			}
-			else{
-				fDetector = mFeatureDetectorOther;
-				keyPoints = otherKeyPoints;
-			}
+	
+	private class AsyncHomographyProcessor extends AsyncTask<Void, Void,Boolean>{
+		
+		private final TransformInfo tempStorage;
+		private final FeatureDetector detector;
+		private final int tranformMethod, threshhold;
+		
+		public AsyncHomographyProcessor(TransformInfo info){
+			tempStorage = info.clone();
+			detector = getCurrentFeatureDetector();
+			tranformMethod = mHomographyMethods.get(mHomographyMethod);
+			threshhold = mRansacThreshhold;
 		}
 
 		@Override
-		protected Point[] doInBackground(Void... arg0) {
-
-			//If of ARGB_8888 configuration format set flag
-			Bitmap.Config imgConfig = image.getConfig();
-			boolean unPreMultiplyAlpha = false;
-			switch (imgConfig) {
-			case ARGB_8888:
-				unPreMultiplyAlpha = true;
-			case RGB_565:
-				break;
-			default: //Unsupported request
-				return null;
+		protected Boolean doInBackground(Void... params) {
+			// Process Homography
+//			
+//			Mat refMat = new Mat();
+//			Utils.bitmapToMat(ref, refMat);
+//			Mat otherMat = new Mat();
+//			Utils.bitmapToMat(other, otherMat);
+//			
+//			storage.reference_image = refMat.clone();
+//			storage.other_image = otherMat.clone();
+//			
+//			// Find Key points of reference image
+//			KeyPoint[] refImgKeyPoints = mCV.findKeyPoints(detector, refMat).toArray();
+//			KeyPoint[] otherImgKeyPoints = mCV.findKeyPoints(detector, otherMat).toArray();
+//		
+//			// store list key points of reference image and others
+//			storage.reference_keyPoint = refImgKeyPoints;
+//			storage.other_keyPoint = otherImgKeyPoints;
+//		
+//			// store Image with key points drawn on reference and other
+//			GetBmpWithKP(refMat.clone(), storage.reference_KPImage, refImgKeyPoints);
+//			GetBmpWithKP(otherMat.clone(), storage.other_KPImage, otherImgKeyPoints);
+//			storage.reference_KPImage = refImgWithKeyPoints;
+//			storage.other_KPImage = otherImgWithKeyPoints;
+			
+			Mat refMat = tempStorage.getReferenceMatrix();
+			Mat otherMat = tempStorage.getOtherMatrix();
+			
+			// Data structures needed
+			// The 2 matrices put to a list
+			List<Mat> listMatrixes = new LinkedList<Mat>();
+			listMatrixes.add(refMat);
+			listMatrixes.add(otherMat);
+			
+			// List that holds the resulting keypoints
+			List<Point[]> matchedPoints = mCV.findKeyPointMatches(
+					detector, listMatrixes);
+			
+			Point[] refMatches = matchedPoints.get(0);
+			Point[] otherMatches = matchedPoints.get(1);
+			
+			// Calculate the matched points
+			// Store Corresponding matched points
+			tempStorage.setPutativeMatches(refMatches, otherMatches);
+			
+			// Convert points to MAt for calculation
+			// Find homography 
+			Mat homography = mCV.findHomography(refMatches, 
+					otherMatches, tranformMethod, threshhold);
+			
+			// Store Homography
+			tempStorage.setHomographyMatrix(homography);
+			return Boolean.TRUE;
+		}
+		
+		@Override 
+		protected void onPostExecute(Boolean result){
+			if (result.booleanValue()){
+				storage = tempStorage;
+				updateListeners(storage);
 			}
-
-			Mat converted = new Mat();
-			Utils.bitmapToMat(image, converted, unPreMultiplyAlpha);
-			MatOfKeyPoint keyPoints = mCV.findKeyPoints(fDetector, converted);
-			return mCV.convertMatOfKeyPointToPointArray(keyPoints);
 		}
-
-		@Override
-		protected void onPostExecute(Point[] ret){
-			// Only act if failed to get points
-			if (ret == null) {
-				Log.e(TAG, "Unable to process key points");
-			} 
-			keyPoints = ret;
-		}
-
+		
 	}
 
 	///////////////////////////////////////////////////////////////////
@@ -308,15 +400,20 @@ public class TransformationBuilder {
 	 * @param id id defined by org.opencv.features2d.FeatureDetector
 	 */
 	public void setFeatureDetector(String detectorType){
-		if (mFeatureDetectorNames.containsKey(detectorType) && 
+		// Input cant be null and library must contain type
+		if (detectorType == null || !mFeatureDetectorNames.containsKey(detectorType)) {
+			Log.e(TAG, "Illegal feature detector inputted: " + detectorType);
+			return;
+		}
+
+		// Only change if in initial state or new detection
+		// type is different
+		if (mFeatureDetectorName == null || 
 				!mFeatureDetectorName.equals(detectorType)){
-			int id = mFeatureDetectorNames.get(detectorType);
-			mFeatureDetectorRef = FeatureDetector.create(id);
-			mFeatureDetectorOther = FeatureDetector.create(id);
 			mFeatureDetectorName = detectorType;
-			updateListeners();
-		} else
-			Log.e(TAG, "Illegal feature detector inputted");
+			Log.i(TAG, "Feature Detector set: " + mFeatureDetectorName);
+			//TODO attempt to Build
+		}	
 	}
 
 	public static Set<String> getSupportedFeatureDetectorNames(){
@@ -326,8 +423,16 @@ public class TransformationBuilder {
 	/**
 	 * @return name of current feature detector
 	 */
-	public String getCurrentFeatureDetector(){
+	public String getCurrentFeatureDetectorName(){
 		return mFeatureDetectorName;
+	}
+	
+	/**
+	 * @return name of current feature detector
+	 */
+	public FeatureDetector getCurrentFeatureDetector(){
+		return FeatureDetector.create(
+				mFeatureDetectorNames.get(mFeatureDetectorName));
 	}
 
 	// Feature Detector library
@@ -350,7 +455,7 @@ public class TransformationBuilder {
 
 	private static final HashMap<String, Integer> mFeatureDetectorNames = new HashMap<String, Integer>();
 	static {
-		mFeatureDetectorNames.put(SIFT, FeatureDetector.SIFT);
+		mFeatureDetectorNames.put(SIFT, FeatureDetector.SIFT); //MH Causes fatal error 10/15/2012
 		mFeatureDetectorNames.put(SURF, FeatureDetector.SURF);
 		mFeatureDetectorNames.put(FAST, FeatureDetector.FAST);
 		mFeatureDetectorNames.put(DYNAMIC_SIFT, FeatureDetector.DYNAMIC_SIFT);
@@ -364,23 +469,21 @@ public class TransformationBuilder {
 		mFeatureDetectorNames.put(DYNAMIC_SIFT,FeatureDetector.DYNAMIC_SIFT);
 		// Add sift names
 	}
-	
-	private void updateListeners(){
+
+	private void updateListeners(TransformInfo storage){
 		if (mlistener != null){
-			if (isTransformable())
-				mlistener.OnReadyToTransform();
+			if (storage != null && storage.isComplete())
+				mlistener.OnHomographyStored(storage);
 			else
-				mlistener.OnNotReadyToTransform();
+				mlistener.OnNoHomographyFound();
 		}
 	}
 
-	private boolean isTransformable(){
-		return refKeyPoints != null && otherKeyPoints != null;
-	}
-	
 	public interface TransformationStateListener {
-		public void OnReadyToTransform();
-		public void OnNotReadyToTransform();
+		public void OnHomographyStored(TransformInfo storage);
+		public void OnNoHomographyFound();
+		public void OnKeypointsFoundForReference(Mat image);
+		public void OnKeypointsFoundForOther(Mat image);
 	}
 
 

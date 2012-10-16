@@ -54,7 +54,7 @@ public final class R {
         public static final int query_image_view=0x7f0a0002;
         public static final int slidingDrawer=0x7f0a0006;
         public static final int take_picture_button=0x7f0a0012;
-        public static final int threshhold_seekbar=0x7f0a0010;
+        public static final int threshhold_seekbar_textview=0x7f0a0010;
         public static final int threshold_seekbar=0x7f0a0011;
         public static final int transformButton=0x7f0a0009;
     }

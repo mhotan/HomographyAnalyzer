@@ -8,10 +8,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import org.opencv.core.Mat;
+
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -19,6 +22,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
+import android.view.TextureView;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -29,10 +33,12 @@ import android.widget.Button;
 import android.widget.Gallery;
 import android.widget.GridView;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.SlidingDrawer;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.homographyanalyzer.R;
@@ -41,6 +47,7 @@ import edu.uw.homographyanalyzer.camera.BaseImageTaker;
 import edu.uw.homographyanalyzer.camera.ExternalApplication;
 import edu.uw.homographyanalyzer.global.GlobalLogger;
 import edu.uw.homographyanalyzer.global.LoggerInterface;
+import edu.uw.homographyanalyzer.quicktransform.TransformInfo;
 import edu.uw.homographyanalyzer.quicktransform.TransformationDemoActivity;
 import edu.uw.homographyanalyzer.reusable.ComputerVision;
 import edu.uw.homographyanalyzer.reusable.ComputerVisionCallback;
@@ -140,9 +147,18 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 	private Spinner featureDetectorSpinner, homoMethodSpinner;
 	private SeekBar threshhold;
 
+	// Transformation Builder
 	private TransformationBuilder tranBuilder;
 
+	private TransformInfo storage;
+	
+	//Computer vision
 	private ComputerVision mCV;
+	
+	// text to presented above seekbar
+	private TextView mSeekbarText;
+	
+	private ImageView expandedImage;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -155,12 +171,18 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 		mCV = new ComputerVision(this, this, this);
 		mCV.initializeService();
 
+		expandedImage = (ImageView) findViewById(R.id.exp_image);
+		expandedImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+		
 		transformButton = (Button) findViewById(R.id.transformButton);
+		transformButton.setEnabled(false);
 		transformButton.setOnClickListener(this);
 
 		searchButton = (ImageButton) findViewById(R.id.imageRetrieverButton);
 		searchButton.setOnClickListener(this);
 
+		mSeekbarText = (TextView) findViewById(R.id.threshhold_seekbar_textview);
+		
 		// List of features
 		featureDetectorSpinner = (Spinner) findViewById(R.id.features);
 
@@ -198,16 +220,16 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 					selectPosition = OTHER_IMG_SELECT;
 				}
 
-				//				CharSequence message = "position:" + selectPosition;
-				//				Toast toast = Toast.makeText(This, message, Toast.LENGTH_SHORT);
-				//				toast.show();
-				//				Log.i(TAG, message.toString());
-
 				// If the image has already been selected 
 				// this requires another mechanism to search for images
 				if (!mImageAdapter.isDefaultImage(selectPosition)){
 					searchButton.setEnabled(true);
 					searchButton.setVisibility(ImageButton.VISIBLE);
+					
+					//display the image on the picture view
+					Bitmap image = 	mImageAdapter.getImage(selectPosition);
+					if (image != null)
+						expandedImage.setImageBitmap(image);
 				} else {
 					searchButton.setEnabled(false);
 					searchButton.setVisibility(ImageButton.INVISIBLE);
@@ -218,8 +240,6 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 				return false;
 			}
 		});
-
-		
 	}
 
 	private void initializeFeatures(Spinner s){
@@ -230,7 +250,7 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 		s.setAdapter(dataAdapter);
 		
 		//Set the default value
-		String detector = tranBuilder.getCurrentFeatureDetector();
+		String detector = tranBuilder.getCurrentFeatureDetectorName();
 		int num = s.getCount();
 		for (int i = 0; i < num; ++i){
 			if (s.getItemAtPosition(i).equals(detector)) {
@@ -298,31 +318,80 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 
 		// Depending on how image was obtained,
 		// obtain a Bitmap image of object
-		Bitmap image = null;
-		if (filePath != null) {
-			message = imgIdentity + " Found! file: " + filePath;
-			image = BitmapFactory.decodeFile(filePath);
-		} else {
-			Uri uri = data.getExtras().getParcelable(
+		// Getting source of the image
+		
+//		if (filePath != null) {
+//			message = imgIdentity + " Found! file: " + filePath;
+//			image = BitmapFactory.decodeFile(filePath);
+//		} else {
+//			Uri uri = data.getExtras().getParcelable(
+//					BaseImageTaker.INTENT_RESULT_IMAGE_URI);
+//			//			message = imgIdentity + " Found! URI: " + uri.getPath();
+//			//			image = BitmapFactory.decodeFile(uri.getPath());
+//			try {
+//				image = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+//			} catch (FileNotFoundException e) {
+//				Log.e(TAG, "URI returned by image retreiver not found");
+//			} catch (IOException e) {
+//				Log.e(TAG, "IO Exception: " +e);
+//			}
+//		}
+		
+		//Decode File path
+		if (filePath == null) {
+			String[] medData = { MediaStore.Images.Media.DATA };
+			//query the data
+			Uri pickedUri = data.getExtras().getParcelable(
 					BaseImageTaker.INTENT_RESULT_IMAGE_URI);
-			//			message = imgIdentity + " Found! URI: " + uri.getPath();
-			//			image = BitmapFactory.decodeFile(uri.getPath());
-			try {
-				image = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
-			} catch (FileNotFoundException e) {
-				Log.e(TAG, "URI returned by image retreiver not found");
-			} catch (IOException e) {
-				Log.e(TAG, "IO Exception: " +e);
+			Cursor picCursor = managedQuery(pickedUri, medData, null, null, null);
+			if(picCursor!=null)
+			{
+			    //get the path string
+			    int index = picCursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+			    picCursor.moveToFirst();
+			    filePath = picCursor.getString(index);
 			}
+			else
+				filePath = pickedUri.getPath();
 		}
-
+		
+		int targetWidth = 600;
+		int targetHeight = 400;
+		
+		BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
+		bmpOptions.inJustDecodeBounds = true;
+		BitmapFactory.decodeFile(filePath, bmpOptions);
+		int currHeight = bmpOptions.outHeight;
+		int currWidth = bmpOptions.outWidth;
+		
+		int sampleSize = 1;
+		{
+		    //use either width or height
+		    if (currWidth>currHeight)
+		        sampleSize = Math.round((float)currHeight/(float)targetHeight);
+		    else
+		        sampleSize = Math.round((float)currWidth/(float)targetWidth);
+		}
+		
+		bmpOptions.inSampleSize = sampleSize;
+		bmpOptions.inJustDecodeBounds = false;
+		//decode the file with restricted sizee
+		Bitmap image = BitmapFactory.decodeFile(filePath, bmpOptions);
+		
+		
+		//Update the adapter and transform builder
 		if (image == null){
 			message = "Null image cannot display";
 			Log.e(TAG, message);
 			return;
-		} else
+		} else {
 			mImageAdapter.setImage(image, position);
-
+			if (position == 0)
+				tranBuilder.setReferenceImage(image);
+			else if (position == 1)
+				tranBuilder.setOtherImage(image);
+		}
+		
 		Toast t = Toast.makeText(this, message, Toast.LENGTH_SHORT);
 		t.show();
 	}
@@ -350,6 +419,7 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 		tranBuilder = new TransformationBuilder(mCV);
 		initializeFeatures(featureDetectorSpinner);
 		initializeMethods(homoMethodSpinner);
+		tranBuilder.setTransformationStateListener(this);
 		mCVLibraryInitialized = true;
 	}
 
@@ -384,45 +454,24 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 	}
 
 	/**
-	 * Allow user to perform transform
-	 */
-	@Override
-	public void OnReadyToTransform() {
-		boolean ready = mCVLibraryInitialized;
-		transformButton.setEnabled(ready);
-	}
-
-	/**
-	 * Adjust the User iterface to depict that it is not ready to transform
-	 */
-	@Override
-	public void OnNotReadyToTransform() {
-		transformButton.setEnabled(false);
-	}
-
-	/**
 	 *Starts new Activity to display Homography transformation
 	 */
 	@Override
 	public void onClick(View v) {
 		if (v.getId() == transformButton.getId()){
-
-
-
-			//preform transformation
-			//			List<Uri> uris = mImageAdapter.getUris();
-			//			if (uris != null) {
-			//				Uri base = uris.get(0);
-			//				Uri query = uris.get(1);
-			//				
-			//				Intent i = new Intent(this, TransformationDemoActivity.class);
-			//				i.putExtra(BASE_URI_EXTRA, base);
-			//				i.putExtra(QUERY_URI_EXTRA, query);
-			//				startActivity(i);
-			//			}
+			transformButton.setEnabled(false);
+			
+			// Remove all but the two base imagess
+			
+			List<Bitmap> imagesToAdd = tranBuilder.getWarpedImages();
+			
+			// Add images to adapter
+			for (Bitmap b : imagesToAdd){
+				mImageAdapter.addImageToEnd(b);
+			}
 
 			// Start transformation process
-
+			transformButton.setEnabled(true);
 		}
 	}
 
@@ -452,21 +501,38 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 
 	@Override
 	public void onProgressChanged(SeekBar seekBar, int progress,
-			boolean fromUser) {
-		int nThreshhold = Math.min(1, progress);
+			boolean fromUser) {}
+
+	@Override
+	public void onStartTrackingTouch(SeekBar seekBar) {}
+
+	@Override
+	public void onStopTrackingTouch(SeekBar seekBar) {
+		int nThreshhold = Math.max(1, seekBar.getProgress());
+		Log.i(TAG, "STop tracking at pos: " + nThreshhold);
+		mSeekbarText.setText("Threshhold: " + nThreshhold);
 		tranBuilder.setRansacThreshold(nThreshhold);
-		Toast t = Toast.makeText(this, "Toast threshhold: "  + nThreshhold, Toast.LENGTH_SHORT);
-		t.show();
 	}
 
 	@Override
-	public void onStartTrackingTouch(SeekBar seekBar) {
+	public void OnHomographyStored(TransformInfo storage) {
+		boolean ready = mCVLibraryInitialized;
+		transformButton.setEnabled(ready);
+	}
+
+	@Override
+	public void OnNoHomographyFound() {
+		transformButton.setEnabled(false);
+	}
+
+	@Override
+	public void OnKeypointsFoundForReference(Mat image) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void onStopTrackingTouch(SeekBar seekBar) {
+	public void OnKeypointsFoundForOther(Mat image) {
 		// TODO Auto-generated method stub
 		
 	}

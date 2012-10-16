@@ -158,6 +158,10 @@ public class ImageSelectionAdapter extends BaseAdapter {
 		notifyDataSetChanged();
 	}
 	
+	public void addImageToEnd(Bitmap image){
+		setImage(image, mBitMaps.size());
+	}
+	
 	/**
 	 * Resets the image thumbnails to show the search button
 	 */
@@ -171,15 +175,15 @@ public class ImageSelectionAdapter extends BaseAdapter {
 		}
 	}
 	
-	/**
-	 * 
-	 * @return if there are two valid images to transform
-	 */
-	public boolean isReadyToTransform(){
-		// If the first two images are not the basic search image
-		boolean ready = !isDefaultImage(0) && !isDefaultImage(1);
-		return ready;
-	}
+//	/**
+//	 * 
+//	 * @return if there are two valid images to transform
+//	 */
+//	public boolean isReadyToTransform(){
+//		// If the first two images are not the basic search image
+//		boolean ready = !isDefaultImage(0) && !isDefaultImage(1);
+//		return ready;
+//	}
 	
 	public boolean isDefaultImage(int pos){
 		if (pos < 0 || pos >= mBitMaps.size())
@@ -187,100 +191,12 @@ public class ImageSelectionAdapter extends BaseAdapter {
 		else 
 			return mBitMaps.get(pos) == mPlaceHolder;
 	}
-		
-//		boolean createNewImageView = false;
-//		ImageView imageView = null;
-//		if (position == POSITION_BASE) {
-//			ImageView base = toShowMap.get(POSITION_BASE);
-//			if (base == null) 
-//				createNewImageView = true;
-//			else 
-//				imageView = base;
-//		} else if (position == POSITION_QUERY) {
-//			ImageView query = toShowMap.get(POSITION_QUERY);
-//			if (query == null) 
-//				createNewImageView = true;
-//			else
-//				imageView = query;
-//		} else {
-//			Toast t = Toast.makeText(mContext, "Illegal view selected", Toast.LENGTH_SHORT);
-//			t.show();
-//		}
-//		
-//		if (createNewImageView){
-//			if (convertView == null) {  // if it's not recycled, initialize some attributes
-//				imageView = new ImageView(mContext);
-//				imageView.setLayoutParams(new GridView.LayoutParams(85, 85));
-//				imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-//				imageView.setPadding(8, 8, 8, 8);
-//			} else {
-//				imageView = (ImageView) convertView;
-//			}
-//			imageView.setImageResource(Images[position]);
-//		}
-//        return imageView;
 	
-	
-//	/**
-//	 * Changes image to image stored at uri
-//	 * if position is not recognized everything is reset
-//	 * @param uri stores image
-//	 * @param position either POSTION_BASE or POSITION_QUERY
-//	 */
-//	public void changeImage(Uri uri, int position){
-//		ImageView imageView = new ImageView(mContext);
-//		imageView.setLayoutParams(new GridView.LayoutParams(
-//				ViewGroup.LayoutParams.MATCH_PARENT,
-//				ViewGroup.LayoutParams.MATCH_PARENT));
-//		imageView.setScaleType(ImageView.ScaleType.CENTER);
-//		imageView.setPadding(8, 8, 8, 8);
-//		
-//		if (position == POSITION_BASE ||
-//				position == POSITION_QUERY && 
-//				uri != null) {
-//			imageView.setImageURI(uri);
-//			
-//			toShowMap.put(position, imageView);
-//			// Store the uris
-//			uriMap.put(position, uri);
-//			
-//			//Update the tracker
-//			if (position == POSITION_BASE)
-//				imageTracker.setFirstImageIsLoaded(true);
-//			else 
-//				imageTracker.setSecondImageIsLoaded(true);
-//			
-//			// Update the GUI
-//			notifyDataSetChanged();
-//		} else // Do nothing if position is wrong
-//			imageView = null;
-//		
-//	}
-//	
-//	/**
-//	 * Changes image to image stored at filePath
-//	 * @param filePath stores image
-//	 * @param position either POSTION_BASE or POSITION_QUERY
-//	 */
-//	public void changeImage(String filePath, int position){
-//		File imgFile = new File(filePath);
-//		changeImage(Uri.fromFile(imgFile), position);
-//	}
-//	
-//	
-//
-//	/**
-//	 * 
-//	 * @return arraylist of base and query image uri with base first position
-//	 * 		return null on failure
-//	 */
-//	public List<Uri> getUris() {
-//		ArrayList<Uri> list = new ArrayList<Uri>();
-//		list.add(uriMap.get(POSITION_QUERY));
-//		list.add(0, uriMap.get(POSITION_BASE));
-//		if (list.size() != 2)
-//			return null;
-//		return Collections.unmodifiableList(list);
-//	}
+	public Bitmap getImage(int pos){
+		if (pos < 0 || pos >= mBitMaps.size())
+			return null;
+		else 
+			return mBitMaps.get(pos);
+	}
 
 }

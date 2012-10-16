@@ -1,5 +1,8 @@
 package edu.uw.homographyanalyzer.reusable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
@@ -10,6 +13,7 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.features2d.KeyPoint;
+import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
 import android.content.Context;
@@ -73,16 +77,46 @@ public class ComputerVision {
 		if(DEBUG) Logd("OpenCV Engine loaded");
 	}
 	
-	
 	/*
 	 * Find the keypoints of a matrix
 	 * featureDetector can be obtained from the FeatureDetector class
 	 * (eg. FeatureDetector.FAST)
 	 */
-	public synchronized MatOfKeyPoint findKeyPoints(FeatureDetector detector, Mat source){
-		MatOfKeyPoint result = new MatOfKeyPoint();	
-		detector.detect(source, result);
-		return result;
+	public synchronized MatOfKeyPoint findKeyPoints(FeatureDetector detector, Mat images){
+		MatOfKeyPoint results = new MatOfKeyPoint();	
+		detector.detect(images, results);
+		return results;
+	}
+	
+	/*
+	 * Find the keypoints between to patrices and returns a list the same size
+	 * as number of images.  Each array is of the same size
+	 * featureDetector can be obtained from the FeatureDetector class
+	 * (eg. FeatureDetector.FAST)
+	 */
+	public synchronized List<Point[]> findKeyPointMatches(FeatureDetector detector, List<Mat> images){
+		List<MatOfKeyPoint> results = new ArrayList<MatOfKeyPoint>();
+		detector.detect(images, results);
+		
+		//Key points per image
+		KeyPoint[] referenceKeyPoints = results.get(0).toArray();
+		KeyPoint[] otherKeyPoints = results.get(1).toArray();
+		
+		int minNumOfPoints = Math.min(referenceKeyPoints.length, otherKeyPoints.length);
+		Point[] refPts = new Point[minNumOfPoints];
+		Point[] otherPts = new Point[minNumOfPoints];
+
+		for (int i = 0; i < minNumOfPoints; i++) {
+			refPts[i] = referenceKeyPoints[i].pt;
+			otherPts[i] = otherKeyPoints[i].pt;
+		}
+		
+		//TODO to change so points are not being removed
+		
+		List<Point[]> matchedPoints = new ArrayList<Point[]>(2); 
+		matchedPoints.add(refPts);
+		matchedPoints.add(otherPts);
+		return matchedPoints;
 	}
 	
 	/*
@@ -140,6 +174,25 @@ public class ComputerVision {
 		
 		result = Calib3d.findHomography(matReference, matOther, method, ransac_treshold);
 		
+		return result;
+	}
+	
+	/**
+	 * Calculates perspective warp of a reference matrix with homography and returns 
+	 * resutls
+	 * 
+	 * @param refMatInv Reference image to be used in transformation
+	 * @param homography 3x3 transfromation matrix for transform operations
+	 * @param invert true if findHomography finds inverse matrix with using Imgproc.WARP_INVERSE_MAP, 
+	 * 			false if normal transformation 
+	 * @return transformed matrix
+	 */
+	public static Mat getWarpedImage(Mat refImage, Mat homography, boolean invert){
+		Mat result = new Mat(refImage.size(), refImage.type());
+		if (invert)
+			Imgproc.warpPerspective(refImage, result, homography, refImage.size(),Imgproc.WARP_INVERSE_MAP);
+		else
+			Imgproc.warpPerspective(refImage, result, homography, refImage.size());
 		return result;
 	}
 	
