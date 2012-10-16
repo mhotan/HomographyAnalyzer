@@ -30,19 +30,22 @@
 
             <ImageButton
                 android:id="@+id/imageRetrieverButton"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_gravity="fill_horizontal|center"
+                android:layout_weight="1"
                 android:contentDescription="@string/query_img_descriptor"
                 android:src="@drawable/ic_action_search_dark"
                 android:text="@string/transform" />
 
             <Button
                 android:id="@+id/transformButton"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
+                android:layout_weight="1"
                 android:text="@string/transform" />
+
         </LinearLayout>
 
         <TextView

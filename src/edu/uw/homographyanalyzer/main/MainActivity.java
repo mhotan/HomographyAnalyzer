@@ -3,11 +3,13 @@ package edu.uw.homographyanalyzer.main;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 
 import android.annotation.TargetApi;
@@ -20,6 +22,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.v4.content.CursorLoader;
 import android.util.Log;
 import android.util.Pair;
 import android.view.Menu;
@@ -124,14 +127,8 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 	// adapter to display images
 	private OrganizedImageSelectionAdapter mImageAdapter;
 
-	// if equal 0 or 1 then represent reference and new image respectively
-	// if OTHER_IMG_SELECT then other image is selected
-	private static int OTHER_IMG_SELECT = -1;
-
 	//Thumbnails of homography images
 	private Gallery mGallery;
-	//UI elements
-	private SlidingDrawer drawer;
 	private Button transformButton;
 	private ImageButton searchButton;
 
@@ -142,21 +139,19 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 	// Transformation Builder
 	private TransformationBuilder tranBuilder;
 
-	private TransformInfo storage;
-	
 	//Computer vision
 	private ComputerVision mCV;
-	
+
 	// text to presented above seekbar
 	private TextView mSeekbarText;
-	
+	private TextView mExpandedImageText;
+
 	private ImageView expandedImage;
-	
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-		mContext = this;
 		// This needs to be done first because many other components
 		// depend on this global logger
 		new GlobalLogger(this);
@@ -165,7 +160,7 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 
 		expandedImage = (ImageView) findViewById(R.id.exp_image);
 		expandedImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
-		
+
 		transformButton = (Button) findViewById(R.id.transformButton);
 		transformButton.setEnabled(false);
 		transformButton.setOnClickListener(this);
@@ -174,7 +169,7 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 		searchButton.setOnClickListener(this);
 
 		mSeekbarText = (TextView) findViewById(R.id.threshhold_seekbar_textview);
-		
+		mExpandedImageText = (TextView) findViewById(R.id.exp_image_text);
 		// List of features
 		featureDetectorSpinner = (Spinner) findViewById(R.id.features);
 
@@ -185,12 +180,12 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 		threshhold = (SeekBar) findViewById(R.id.threshold_seekbar);
 		threshhold.setMax(TransformationBuilder.RANSAC_THRESHHOLD_MAX);
 		threshhold.setOnSeekBarChangeListener(this);
-		
-		drawer = (SlidingDrawer) findViewById(R.id.slidingDrawer);
+
+		//		(SlidingDrawer) findViewById(R.id.slidingDrawer);
 
 		// Adpater for managing images to be displayed in gallery
 		mImageAdapter = new OrganizedImageSelectionAdapter(this);
-		
+
 		// Gallery for displaying images
 		mGallery = (Gallery) findViewById(R.id.gallery);
 		mGallery.setAdapter(mImageAdapter);
@@ -201,33 +196,39 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 			public boolean onItemLongClick(AdapterView<?> listView, View view,
 					int position, long id) {
 
-				int selectPosition;
-
-				switch (position) {
-				case 0:
-				case 1:
-					selectPosition = position;
-					break;
-				default: // Non reference image selected
-					selectPosition = OTHER_IMG_SELECT;
-				}
-
-				// If the image has already been selected 
-				// this requires another mechanism to search for images
-				if (!mImageAdapter.isDefaultImage(selectPosition)){
-					searchButton.setEnabled(true);
-					searchButton.setVisibility(ImageButton.VISIBLE);
-					
-					//display the image on the picture view
-					Bitmap image = 	mImageAdapter.getImage(selectPosition);
-					if (image != null)
-						expandedImage.setImageBitmap(image);
-				} else {
+				boolean isRefOROther = position == 1 || position ==0;
+				final int pos = position;
+				// If the position is 0,1 or reference or other
+				// and if default image
+				// Ask to query
+				if (isRefOROther && mImageAdapter.isDefaultImage(position)){
 					searchButton.setEnabled(false);
 					searchButton.setVisibility(ImageButton.INVISIBLE);
-
 					// If default image => Search needs to occur
-					getImageForPosition(selectPosition);
+					getImageForPosition(pos);
+				} 
+
+				else
+				{ 
+					// if reference or other image but currently
+					// has another image inside it
+					if (isRefOROther){
+						searchButton.setEnabled(true);
+						searchButton.setVisibility(ImageButton.VISIBLE);
+						searchButton.setOnClickListener(new OnClickListener() {
+
+							@Override
+							public void onClick(View v) {
+								getImageForPosition(pos);
+							}
+						});
+					} // Now we need to bring up the image in expanded view
+					Bitmap image = 	mImageAdapter.getImage(position);
+					if (image != null){
+						expandedImage.setImageBitmap(image);
+						String message = mImageAdapter.getTitle(image);
+						mExpandedImageText.setText(message);
+					}
 				}
 				return false;
 			}
@@ -240,7 +241,7 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 				new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, list);
 		dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		s.setAdapter(dataAdapter);
-		
+
 		//Set the default value
 		String detector = tranBuilder.getCurrentFeatureDetectorName();
 		int num = s.getCount();
@@ -250,7 +251,7 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 				break;
 			}
 		}
-		
+
 		s.setOnItemSelectedListener(this);
 	}
 
@@ -260,7 +261,7 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 				new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, list);
 		dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		s.setAdapter(dataAdapter);
-		
+
 		//Set default value
 		String method = tranBuilder.getCurrentHomographyMethod();
 		int num = s.getCount();
@@ -270,7 +271,7 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 				break;
 			}
 		}
-		
+
 		s.setOnItemSelectedListener(this);
 	}
 
@@ -301,9 +302,6 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 		// There are two positions to the that can be found
 		int position = requestCode;
 
-		String imgIdentity = position == 0 
-				? "Base Image" : "Other Image";
-
 		//Check if file path or uri image source
 		String filePath = data.getExtras().getString(
 				BaseImageTaker.INTENT_RESULT_IMAGE_PATH);
@@ -311,66 +309,40 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 		// Depending on how image was obtained,
 		// obtain a Bitmap image of object
 		// Getting source of the image
-		
-//		if (filePath != null) {
-//			message = imgIdentity + " Found! file: " + filePath;
-//			image = BitmapFactory.decodeFile(filePath);
-//		} else {
-//			Uri uri = data.getExtras().getParcelable(
-//					BaseImageTaker.INTENT_RESULT_IMAGE_URI);
-//			//			message = imgIdentity + " Found! URI: " + uri.getPath();
-//			//			image = BitmapFactory.decodeFile(uri.getPath());
-//			try {
-//				image = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
-//			} catch (FileNotFoundException e) {
-//				Log.e(TAG, "URI returned by image retreiver not found");
-//			} catch (IOException e) {
-//				Log.e(TAG, "IO Exception: " +e);
-//			}
-//		}
-		
+
+		Bitmap image = null;
 		//Decode File path
 		if (filePath == null) {
-			String[] medData = { MediaStore.Images.Media.DATA };
 			//query the data
 			Uri pickedUri = data.getExtras().getParcelable(
 					BaseImageTaker.INTENT_RESULT_IMAGE_URI);
-			Cursor picCursor = managedQuery(pickedUri, medData, null, null, null);
-			if(picCursor!=null)
+			image = getBitmapFromURIviaInputStream(pickedUri);
+
+		} else{
+			int targetWidth = 600;
+			int targetHeight = 400;
+
+			BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
+			bmpOptions.inJustDecodeBounds = true;
+			BitmapFactory.decodeFile(filePath, bmpOptions);
+			int currHeight = bmpOptions.outHeight;
+			int currWidth = bmpOptions.outWidth;
+
+			int sampleSize = 1;
 			{
-			    //get the path string
-			    int index = picCursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-			    picCursor.moveToFirst();
-			    filePath = picCursor.getString(index);
+				//use either width or height
+				if (currWidth>currHeight)
+					sampleSize = Math.round((float)currHeight/(float)targetHeight);
+				else
+					sampleSize = Math.round((float)currWidth/(float)targetWidth);
 			}
-			else
-				filePath = pickedUri.getPath();
+
+			bmpOptions.inSampleSize = sampleSize;
+			bmpOptions.inJustDecodeBounds = false;
+			//decode the file with restricted sizee
+			image = BitmapFactory.decodeFile(filePath, bmpOptions);
 		}
-		
-		int targetWidth = 600;
-		int targetHeight = 400;
-		
-		BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
-		bmpOptions.inJustDecodeBounds = true;
-		BitmapFactory.decodeFile(filePath, bmpOptions);
-		int currHeight = bmpOptions.outHeight;
-		int currWidth = bmpOptions.outWidth;
-		
-		int sampleSize = 1;
-		{
-		    //use either width or height
-		    if (currWidth>currHeight)
-		        sampleSize = Math.round((float)currHeight/(float)targetHeight);
-		    else
-		        sampleSize = Math.round((float)currWidth/(float)targetWidth);
-		}
-		
-		bmpOptions.inSampleSize = sampleSize;
-		bmpOptions.inJustDecodeBounds = false;
-		//decode the file with restricted sizee
-		Bitmap image = BitmapFactory.decodeFile(filePath, bmpOptions);
-		
-		
+
 		//Update the adapter and transform builder
 		if (image == null){
 			message = "Null image cannot display";
@@ -383,9 +355,49 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 			else if (position == 1)
 				tranBuilder.setOtherImage(image);
 		}
-		
-		Toast t = Toast.makeText(this, message, Toast.LENGTH_SHORT);
-		t.show();
+	}
+
+	/**
+	 * 
+	 * @param uri
+	 * @return
+	 */
+	private Bitmap getBitmapFromURIviaInputStream(Uri uri){
+
+		Bitmap image = null;
+		try {
+			int targetWidth = 600;
+			int targetHeight = 400;
+
+			BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
+			bmpOptions.inJustDecodeBounds = true;
+			InputStream is = getContentResolver().openInputStream(uri);
+			BitmapFactory.decodeStream(is,null, bmpOptions);
+			int currHeight = bmpOptions.outHeight;
+			int currWidth = bmpOptions.outWidth;
+
+			is.close();
+			InputStream is2 = getContentResolver().openInputStream(uri);
+
+			int sampleSize = 1;
+			{
+				//use either width or height
+				if (currWidth>currHeight)
+					sampleSize = Math.round((float)currHeight/(float)targetHeight);
+				else
+					sampleSize = Math.round((float)currWidth/(float)targetWidth);
+			}
+
+			bmpOptions.inSampleSize = sampleSize;
+			bmpOptions.inJustDecodeBounds = false;
+			//decode the file with restricted sizee
+			image = BitmapFactory.decodeStream(is2, null, bmpOptions);
+			is2.close();
+			return image;
+		} catch (IOException e) {
+			Log.e(TAG, "Exception when reading: "+ e);
+			return image;
+		}
 	}
 
 	@Override
@@ -452,19 +464,18 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 	public void onClick(View v) {
 		if (v.getId() == transformButton.getId()){
 			transformButton.setEnabled(false);
-			
+
 			// Remove all but the two base imagess
-			
 			Pair<Bitmap, Bitmap> imagesToAdd = tranBuilder.getWarpedImages();
 			if (imagesToAdd == null){
 				//Notify User
-				
-			}
-			
-			// Add images to adapter
-			for (Bitmap b : imagesToAdd){
-				mImageAdapter.addImageToEnd(b);
-			}
+				mExpandedImageText.setText("Tranformation is not ready just Yet");
+				return;
+			} else
+				mExpandedImageText.setText(R.string.show_exp_image);
+
+			mImageAdapter.setWarpedImage(imagesToAdd.first);
+			mImageAdapter.setInvertedWarpedImage(imagesToAdd.second);
 
 			// Start transformation process
 			transformButton.setEnabled(true);
@@ -474,10 +485,10 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 	@Override
 	public void onItemSelected(AdapterView<?> spinner, View arg1, int pos,
 			long arg3) {
-		
+
 		Object o = spinner.getItemAtPosition(pos);
 		String request = (String)o;
-		
+
 		String message = "NOTHING";
 		if (spinner == featureDetectorSpinner) {
 			message = "Feature Spinner";
@@ -486,7 +497,7 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 			message = "Homography Method Spinner";
 			tranBuilder.setHomograhyMethod(request);
 		}
-		
+
 		Log.i(TAG, "Spinner item selected " + message + " with item " + request);
 	}
 
@@ -507,11 +518,13 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 		int nThreshhold = Math.max(1, seekBar.getProgress());
 		Log.i(TAG, "STop tracking at pos: " + nThreshhold);
 		mSeekbarText.setText("Threshhold: " + nThreshhold);
-		tranBuilder.setRansacThreshold(nThreshhold);
+		tranBuilder.setRansacThreshhold(nThreshhold);
 	}
 
 	@Override
 	public void OnHomographyStored(TransformInfo storage) {
+		// Ready to show display reset text
+		mExpandedImageText.setText(R.string.show_exp_image);
 		boolean ready = mCVLibraryInitialized;
 		transformButton.setEnabled(ready);
 	}
@@ -523,14 +536,17 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 
 	@Override
 	public void OnKeypointsFoundForReference(Mat image) {
-		// TODO Auto-generated method stub
-		
+		Bitmap disp = Bitmap.createBitmap(image.cols(), image.rows(),
+				Bitmap.Config.ARGB_8888); // Android uses ARGB_8888
+		Utils.matToBitmap(image, disp);
+		mImageAdapter.setReferenceKeyPointImage(disp);
 	}
 
 	@Override
 	public void OnKeypointsFoundForOther(Mat image) {
-		// TODO Auto-generated method stub
-		
+		Bitmap disp = Bitmap.createBitmap(image.cols(), image.rows(),
+				Bitmap.Config.ARGB_8888); // Android uses ARGB_8888
+		Utils.matToBitmap(image, disp);
+		mImageAdapter.setOtherKeyPointImage(disp);
 	}
-
 }

@@ -39,12 +39,7 @@ public class ImageSelectionAdapter extends BaseAdapter {
 	HashMap<Integer, ImageView> toShowMap;
 	HashMap<Integer, Uri> uriMap;
 	
-	// Resource IDs 
-//	private List<Integer> toShowIDs;
-	
 	private List<Bitmap> mBitMaps;
-	
-//	private ImageSelectionStateListener mListener;
 	
 	//Default Search Image
 	private final Bitmap mPlaceHolder;
@@ -167,10 +162,18 @@ public class ImageSelectionAdapter extends BaseAdapter {
 		notifyDataSetChanged();
 	}
 	
+	public void removeAllExtraImages(){
+		Bitmap ref = mBitMaps.get(0);
+		Bitmap other = mBitMaps.get(1);
+		mBitMaps.clear();
+		addImageToEnd(ref);
+		addImageToEnd(other);
+	}
+	
 	/**
 	 * Resets the image thumbnails to show the search button
 	 */
-	protected void reset(){
+	private void reset(){
 		// Reset image to look 
 		mBitMaps.clear();
 		

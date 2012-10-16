@@ -91,7 +91,7 @@ public class TransformInfo {
 		clone.other_matched_points = other_matched_points;
 		clone.homography = homography;
 		clone.generalPhotos.addAll(generalPhotos);
-		return null;
+		return clone;
 	}
 	
 	/**

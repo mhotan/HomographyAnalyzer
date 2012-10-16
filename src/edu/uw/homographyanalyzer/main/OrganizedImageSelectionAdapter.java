@@ -8,6 +8,15 @@ import android.graphics.Bitmap;
 
 public class OrganizedImageSelectionAdapter extends ImageSelectionAdapter {
 
+	private static final String REFERENCE = "Reference Image";
+	private static final String OTHER = "Other Image";
+	private static final String REFERENCE_KEY_POINT = "Reference Image with Key Points";
+	private static final String OTHER_KEY_POINT = "Other Image with Key Points";
+	private static final String PUTATIVE_MATCHES_NO_LINES = "Putative Matches";
+	private static final String PUTATIVE_MATCHES_LINES = "Putative Matches with Lines";
+	private static final String REGULAR_WARP = "Regular Warp";
+	private static final String INVERT_WARP = "Inverse Warp";
+	
 	private Bitmap mReference, mOther;
 	private Bitmap mRefKP, mOtherKP;
 	private Bitmap mPutativeMatchesWithOutLines;
@@ -25,6 +34,10 @@ public class OrganizedImageSelectionAdapter extends ImageSelectionAdapter {
 	 * Builds dynamic view depending on what client has added
 	 */
 	private void buildImageViews(){
+		//Strip away extra images
+		removeAllExtraImages();
+		
+		//Add the list of images
 		if (mReference != null)
 			setImage(mReference, 0);
 		if (mOther != null)
@@ -45,40 +58,60 @@ public class OrganizedImageSelectionAdapter extends ImageSelectionAdapter {
 		addAllImagesToEnd(mDynamicList);
 	}
 	
+	public String getTitle(Bitmap b){
+		if (mReference == b) return REFERENCE;
+		if (mOther == b) return OTHER;
+		if (mRefKP == b) return REFERENCE_KEY_POINT;
+		if (mOtherKP == b) return OTHER_KEY_POINT;
+		if (mPutativeMatchesWithOutLines == b) return PUTATIVE_MATCHES_NO_LINES;
+		if (mPutativeMatchesWithLines == b) return PUTATIVE_MATCHES_LINES;
+		if (mRegularWarp == b) return REGULAR_WARP;
+		if (mInvWarp == b) return INVERT_WARP;
+		else return "Error: No Title";
+	}
+	
 	public void setReferenceImage(Bitmap ref){
+		if (ref == null) return;
 		mReference = ref;
 		buildImageViews();
 	}
 	
 	public void setOtherImage(Bitmap other){
+		if (other == null) return;
 		mOther = other;
 		buildImageViews();
 	}
 	
 	public void setReferenceKeyPointImage(Bitmap img){
+		if (img == null) return;
 		mRefKP = img;
 		buildImageViews();
 	}
 	
 	public void setOtherKeyPointImage(Bitmap img){
+		if (img == null) return;
 		mOtherKP = img;
 		buildImageViews();
 	}
 	public void setPutativeImageWithoutLinesImage(Bitmap img){
+		if (img == null) return;
 		mPutativeMatchesWithOutLines = img;
 		buildImageViews();
 	}
 	public void setPutativeImageWithLinesImage(Bitmap img){
+		if (img == null) return;
 		mPutativeMatchesWithLines = img;
 		buildImageViews();
 	}
 	
 	public void setWarpedImage(Bitmap img){
+		if (img == null) return;
 		mRegularWarp = img;
 		buildImageViews();
 	}
 	
 	public void setInvertedWarpedImage(Bitmap img){
+		if (img == null) return;
 		mInvWarp = img;
 		buildImageViews();
 	}

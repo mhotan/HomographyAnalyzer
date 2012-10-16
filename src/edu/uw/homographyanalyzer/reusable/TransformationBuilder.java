@@ -97,17 +97,19 @@ public class TransformationBuilder {
 	}
 
 	/**
-	 * Attempts to build transformation if possible
+	 * Attempts to build transformation and returns in paor
+	 * pair.first = regular inversion
+	 * pair.secod = inverse ivnersion 
 	 * @return null if couldnt build or Data other wise
 	 */
-	public boolean getWarpedImages(TransformInfo info){
-		if (!info.isComplete()) return false;
+	public Pair<Bitmap, Bitmap> getWarpedImages(){
+		if (!storage.isComplete()) return null;
 		
 		// Check if storage has a complete homography
-		Mat homography = info.getHomographyMatrix() ;
+		Mat homography = storage.getHomographyMatrix() ;
 		
 		// Do a transformation with non inverted map
-		Mat refMat = info.getReferenceMatrix();
+		Mat refMat = storage.getReferenceMatrix();
 		
 		Mat result = ComputerVision.getWarpedImage(refMat, homography, false);
 		Bitmap disp = Bitmap.createBitmap(result.cols(), result.rows(),
@@ -119,9 +121,7 @@ public class TransformationBuilder {
 				Bitmap.Config.ARGB_8888); // Android uses ARGB_8888
 		Utils.matToBitmap(resultInv, dispInv);
 
-		info.addBitmap(disp);
-		info.addBitmap(dispInv);
-		return true;
+		return new Pair<Bitmap, Bitmap>(disp, dispInv);
 	}
 
 	///////////////////////////////////////////////////////////////////
@@ -151,7 +151,7 @@ public class TransformationBuilder {
 				|| !mHomographyMethod.equals(method)){
 			mHomographyMethod = method;
 			Log.i(TAG, "Set Homography Method set: " + mHomographyMethod);
-			//TODO Update Build
+			attemptToBuild();
 		} 
 	}
 
@@ -164,7 +164,7 @@ public class TransformationBuilder {
 		mRansacThreshhold = Math.max(RANSAC_RANGE.first, //It is at least min value
 				Math.min(RANSAC_RANGE.second, threshhold)); // atmost max value
 		Log.i(TAG, "Ransac threshhold set: " + mRansacThreshhold);
-		//TODO update build
+		attemptToBuild();
 	}
 
 	/**
@@ -299,12 +299,12 @@ public class TransformationBuilder {
 			
 			if (mWhichImg == REF_IMG){
 				storage.setReferenceImage(mImg, result);
-				mlistener.OnKeypointsFoundForReference(storage.getReferenceMatrix());
+				mlistener.OnKeypointsFoundForReference(storage.getRefKeyPointImage());
 				// because image changed must attempt to build again
 				attemptToBuild();
 			} else if (mWhichImg == OTHER_IMG) {
 				storage.setOtherImage(mImg, result);
-				mlistener.OnKeypointsFoundForOther(storage.getOtherMatrix());
+				mlistener.OnKeypointsFoundForOther(storage.getOtherKeyPointImage());
 				// because image changed must attempt to build again
 				attemptToBuild();
 			}
@@ -329,28 +329,6 @@ public class TransformationBuilder {
 		@Override
 		protected Boolean doInBackground(Void... params) {
 			// Process Homography
-//			
-//			Mat refMat = new Mat();
-//			Utils.bitmapToMat(ref, refMat);
-//			Mat otherMat = new Mat();
-//			Utils.bitmapToMat(other, otherMat);
-//			
-//			storage.reference_image = refMat.clone();
-//			storage.other_image = otherMat.clone();
-//			
-//			// Find Key points of reference image
-//			KeyPoint[] refImgKeyPoints = mCV.findKeyPoints(detector, refMat).toArray();
-//			KeyPoint[] otherImgKeyPoints = mCV.findKeyPoints(detector, otherMat).toArray();
-//		
-//			// store list key points of reference image and others
-//			storage.reference_keyPoint = refImgKeyPoints;
-//			storage.other_keyPoint = otherImgKeyPoints;
-//		
-//			// store Image with key points drawn on reference and other
-//			GetBmpWithKP(refMat.clone(), storage.reference_KPImage, refImgKeyPoints);
-//			GetBmpWithKP(otherMat.clone(), storage.other_KPImage, otherImgKeyPoints);
-//			storage.reference_KPImage = refImgWithKeyPoints;
-//			storage.other_KPImage = otherImgWithKeyPoints;
 			
 			Mat refMat = tempStorage.getReferenceMatrix();
 			Mat otherMat = tempStorage.getOtherMatrix();
@@ -412,7 +390,7 @@ public class TransformationBuilder {
 				!mFeatureDetectorName.equals(detectorType)){
 			mFeatureDetectorName = detectorType;
 			Log.i(TAG, "Feature Detector set: " + mFeatureDetectorName);
-			//TODO attempt to Build
+			attemptToBuild();
 		}	
 	}
 
@@ -455,8 +433,8 @@ public class TransformationBuilder {
 
 	private static final HashMap<String, Integer> mFeatureDetectorNames = new HashMap<String, Integer>();
 	static {
-		mFeatureDetectorNames.put(SIFT, FeatureDetector.SIFT); //MH Causes fatal error 10/15/2012
-		mFeatureDetectorNames.put(SURF, FeatureDetector.SURF);
+//		mFeatureDetectorNames.put(SIFT, FeatureDetector.SIFT); //MH Causes fatal error 10/15/2012
+//		mFeatureDetectorNames.put(SURF, FeatureDetector.SURF); //MH SIFT and SURF not in free OPENCV library 
 		mFeatureDetectorNames.put(FAST, FeatureDetector.FAST);
 		mFeatureDetectorNames.put(DYNAMIC_SIFT, FeatureDetector.DYNAMIC_SIFT);
 		mFeatureDetectorNames.put(DYNAMIC_SURF, FeatureDetector.DYNAMIC_SURF);
