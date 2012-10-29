@@ -350,6 +350,8 @@ public class TransformationBuilder {
 			Mat refMat = tempStorage.getReferenceMatrix();
 			Mat otherMat = tempStorage.getOtherMatrix();
 
+			
+			
 			// Data structures needed
 			// The 2 matrices put to a list
 			List<Mat> listMatrixes = new LinkedList<Mat>();

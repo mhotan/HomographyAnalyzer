@@ -94,6 +94,8 @@ public class TransformInfo {
 		clone.other_matched_points = other_matched_points;
 		clone.homography = homography;
 		clone.generalPhotos.addAll(generalPhotos);
+		clone.reference_Descriptors = reference_Descriptors;
+		clone.other_Descriptors = other_Descriptors;
 		return clone;
 	}
 	
@@ -118,6 +120,8 @@ public class TransformInfo {
 		reference_matched_points = null;
 		other_matched_points = null;
 		homography = null;
+		other_Descriptors = null;
+		reference_Descriptors = null;
 		generalPhotos.clear();
 	}
 	
@@ -311,6 +315,20 @@ public class TransformInfo {
 				(Point[])reference_matched_points.clone(),
 				(Point[])other_matched_points.clone());
 		return p;
+	}
+	
+	/**
+	 * Returns a list of descriptors defined by current images
+	 * Order proceed as the reference image first followed by other images
+	 * 
+	 * @return empty list if no reference image exist, or list containing descriptors
+	 */
+	public List<Mat> getDescriptors(){
+		List<Mat> list = new ArrayList<Mat>();
+		if (reference_Descriptors == null) return list;
+		list.add(reference_Descriptors);
+		list.add(other_Descriptors);
+		return list;
 	}
 
 	/**

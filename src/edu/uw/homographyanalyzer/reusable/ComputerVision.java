@@ -8,12 +8,16 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.features2d.KeyPoint;
 import org.opencv.imgproc.Imgproc;
+
+import edu.uw.homographyanalyzer.tools.Utility;
 
 import android.app.Activity;
 import android.content.Context;
@@ -140,12 +144,18 @@ public class ComputerVision {
 	 * RANSAC method is used.
 	 */
 	public Mat findHomography(MatOfKeyPoint referenceKeyPoints, MatOfKeyPoint otherKeyPoint,
-								int ransac_treshold){
+								Mat refDescriptor, Mat otherDescriptor
+								,int ransac_treshold){
 		// Intermediate data structures expected by the findHomography function
 		// provided by the library
 		Point[] referencePoints, otherPoints;
 		MatOfPoint2f matReference, matOther;
 		Mat result;
+		
+		MatOfDMatch matches = Utility.getMatchingCorrespondences(
+				refDescriptor, otherDescriptor); 
+		
+		
 		
 		referencePoints = convertMatOfKeyPointToPointArray(referenceKeyPoints);
 		otherPoints = convertMatOfKeyPointToPointArray(otherKeyPoint);
@@ -155,6 +165,21 @@ public class ComputerVision {
 		result = Calib3d.findHomography(matReference, matOther, Calib3d.RANSAC, ransac_treshold);
 		
 		return result;
+	}
+	
+	/*
+	 * Given the keypoints, compute the feature descriptors
+	 */
+	private Mat computeDescriptors(Mat img,
+			MatOfKeyPoint kp) {
+		Mat desc = new Mat();
+		// Feature extractor
+		DescriptorExtractor de = DescriptorExtractor
+				.create(DescriptorExtractor.ORB);
+		
+		de.compute(img, kp, desc);
+		
+		return desc;
 	}
 	
 	/*
