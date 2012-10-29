@@ -16,6 +16,7 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.features2d.KeyPoint;
 import org.opencv.imgproc.Imgproc;
@@ -174,6 +175,7 @@ public class TransformationBuilder {
 		return Collections.unmodifiableSet(mHomographyMethods.keySet());
 	} 
 
+	//public cosntants to identify homography projection matrix methods 
 	public static final String RANSAC = "RANSAC";
 	public static final String REGULAR = "ALL POINTS";
 	public static final String LMEDS = "LEAST MEDIAN";
@@ -276,7 +278,7 @@ public class TransformationBuilder {
 	 * Runs feature detection in the background for specific image
 	 * @author mhotan
 	 */
-	private class AsyncFeatureDetector extends AsyncTask<Void, Void, KeyPoint[]>{
+	private class AsyncFeatureDetector extends AsyncTask<Void, Void, Pair<MatOfKeyPoint, Mat>>{
 
 		private FeatureDetector mFd;
 		private int mWhichImg;
@@ -293,20 +295,25 @@ public class TransformationBuilder {
 		 * Finds Key Points in new image
 		 */
 		@Override
-		protected KeyPoint[] doInBackground(Void... params) {
-			return mCV.findKeyPoints(mFd, mImg).toArray();
+		protected Pair<MatOfKeyPoint, Mat> doInBackground(Void... params) {
+			MatOfKeyPoint mat = mCV.findKeyPoints(mFd, mImg);
+			// Compute the feature 
+			Mat descriptors = new Mat();
+			getCurrentDescriptorExtractor().compute(mImg, mat, descriptors);
+			
+			return new Pair<MatOfKeyPoint, Mat>(mat, descriptors);
 		}
 		//Runs on main thread
 		@Override
-		protected void onPostExecute(KeyPoint[] result){
+		protected void onPostExecute(Pair<MatOfKeyPoint, Mat> result){
 
 			if (mWhichImg == REF_IMG){
-				storage.setReferenceImage(mImg, result);
+				storage.setReferenceImage(mImg, result.first, result.second);
 				mlistener.OnKeypointsFoundForReference(storage.getRefKeyPointImage());
 				// because image changed must attempt to build again
 				attemptToBuild();
 			} else if (mWhichImg == OTHER_IMG) {
-				storage.setOtherImage(mImg, result);
+				storage.setOtherImage(mImg, result.first, result.second);
 				mlistener.OnKeypointsFoundForOther(storage.getOtherKeyPointImage());
 				// because image changed must attempt to build again
 				attemptToBuild();
@@ -435,40 +442,85 @@ public class TransformationBuilder {
 		return FeatureDetector.create(
 				mFeatureDetectorNames.get(mFeatureDetectorName));
 	}
+	
+	/**
+	 * Obtains the current descriptor extractor that pertains to the descriptor
+	 * @return current associated DescriptorExtractor 
+	 */
+	public DescriptorExtractor getCurrentDescriptorExtractor(){
+		return DescriptorExtractor
+				.create(mFeatureDescriptors.get(
+						// Obtain associated Integer ID with feature detection scheme
+						mFeatureDetectorNames.get(mFeatureDetectorName)));
+	}
 
 	// Feature Detector library
 	public static final String SIFT = "SIFT";
 	public static final String SURF = "SURF";
 	public static final String FAST = "FAST";
+	public static final String ORB = "ORB";
 	private static final String DYNAMIC_PREFIX = "DYNAMIC ";
 	public static final String DYNAMIC_SIFT = DYNAMIC_PREFIX+SIFT;
 	public static final String DYNAMIC_SURF = DYNAMIC_PREFIX+SURF;
 	public static final String DYNAMIC_FAST = DYNAMIC_PREFIX+FAST;
+	public static final String DYNAMIC_ORB = DYNAMIC_PREFIX+ORB;
 	private static final String GRID_PREFIX = "GRID ";
 	public static final String GRID_SIFT = GRID_PREFIX+SIFT;
 	public static final String GRID_SURF = GRID_PREFIX+SURF;
 	public static final String GRID_FAST = GRID_PREFIX+FAST;
+	public static final String GRID_ORB = GRID_PREFIX+ORB;
 	private static final String PYRAMID_PREFIX = "PYRAMID ";
 	public static final String PYRAMID_SIFT = PYRAMID_PREFIX+SIFT;
 	public static final String PYRAMID_SURF = PYRAMID_PREFIX+SURF;
 	public static final String PYRAMID_FAST = PYRAMID_PREFIX+FAST;
+	public static final String PYRAMID_ORB = PYRAMID_PREFIX+ORB;
 	// Add sift names
 
 	private static final HashMap<String, Integer> mFeatureDetectorNames = new HashMap<String, Integer>();
 	static {
 		//		mFeatureDetectorNames.put(SIFT, FeatureDetector.SIFT); //MH Causes fatal error 10/15/2012
 		//		mFeatureDetectorNames.put(SURF, FeatureDetector.SURF); //MH SIFT and SURF not in free OPENCV library 
+		mFeatureDetectorNames.put(ORB, FeatureDetector.ORB);
 		mFeatureDetectorNames.put(FAST, FeatureDetector.FAST);
 //		mFeatureDetectorNames.put(DYNAMIC_SIFT, FeatureDetector.DYNAMIC_SIFT);
 //		mFeatureDetectorNames.put(DYNAMIC_SURF, FeatureDetector.DYNAMIC_SURF);
 		mFeatureDetectorNames.put(DYNAMIC_FAST, FeatureDetector.DYNAMIC_FAST);
+		mFeatureDetectorNames.put(DYNAMIC_ORB, FeatureDetector.DYNAMIC_ORB);
 //		mFeatureDetectorNames.put(GRID_SIFT, FeatureDetector.GRID_SIFT);
 //		mFeatureDetectorNames.put(GRID_SURF, FeatureDetector.GRID_SURF);
 		mFeatureDetectorNames.put(GRID_FAST, FeatureDetector.GRID_FAST);
+		mFeatureDetectorNames.put(GRID_ORB, FeatureDetector.GRID_ORB);
 //		mFeatureDetectorNames.put(PYRAMID_SIFT, FeatureDetector.PYRAMID_SIFT);
 //		mFeatureDetectorNames.put(PYRAMID_SURF, FeatureDetector.PYRAMID_SURF);
 		mFeatureDetectorNames.put(PYRAMID_FAST,FeatureDetector.PYRAMID_FAST);
+		mFeatureDetectorNames.put(PYRAMID_ORB,FeatureDetector.PYRAMID_ORB);
 		// Add sift names
+	}
+	
+	private static final HashMap<Integer, Integer> mFeatureDescriptors = new HashMap<Integer, Integer>();
+	static {
+		//For all feature ORB feature detectors 
+		mFeatureDescriptors.put(FeatureDetector.ORB, DescriptorExtractor.ORB);
+		mFeatureDescriptors.put(FeatureDetector.DYNAMIC_ORB, DescriptorExtractor.ORB);
+		mFeatureDescriptors.put(FeatureDetector.GRID_ORB, DescriptorExtractor.ORB);
+		mFeatureDescriptors.put(FeatureDetector.PYRAMID_ORB, DescriptorExtractor.ORB);
+		
+		// For all Fast feature descriptors there is no FASt descriptor extractor
+		// therefore use a implementation that works...ORB
+		mFeatureDescriptors.put(FeatureDetector.FAST, DescriptorExtractor.ORB);
+		mFeatureDescriptors.put(FeatureDetector.DYNAMIC_FAST, DescriptorExtractor.ORB);
+		mFeatureDescriptors.put(FeatureDetector.GRID_FAST, DescriptorExtractor.ORB);
+		mFeatureDescriptors.put(FeatureDetector.PYRAMID_FAST, DescriptorExtractor.ORB);
+		
+		mFeatureDescriptors.put(FeatureDetector.SIFT, DescriptorExtractor.SIFT);
+		mFeatureDescriptors.put(FeatureDetector.PYRAMID_SIFT, DescriptorExtractor.SIFT);
+		mFeatureDescriptors.put(FeatureDetector.DYNAMIC_SIFT, DescriptorExtractor.SIFT);
+		mFeatureDescriptors.put(FeatureDetector.GRID_SIFT, DescriptorExtractor.SIFT);
+		
+		mFeatureDescriptors.put(FeatureDetector.SURF, DescriptorExtractor.SURF);
+		mFeatureDescriptors.put(FeatureDetector.DYNAMIC_SURF, DescriptorExtractor.SURF);
+		mFeatureDescriptors.put(FeatureDetector.PYRAMID_SURF, DescriptorExtractor.SURF);
+		mFeatureDescriptors.put(FeatureDetector.GRID_SURF, DescriptorExtractor.SURF);
 	}
 
 	/**

@@ -56,7 +56,10 @@ public class TransformInfo {
 	private Mat reference_image, other_image;
 	
 	// KeyPoint features for both images sizes are not equal
-	private KeyPoint[] reference_keyPoint, other_keyPoint;
+	private MatOfKeyPoint reference_keyPoint, other_keyPoint;
+	
+	// KeyPoint features for both images sizes are not equal
+	private Mat reference_Descriptors, other_Descriptors;
 	
 	// Bitmaps of reference and other images with keypoints
 	private Mat reference_KPImage, other_KPImage;
@@ -141,9 +144,10 @@ public class TransformInfo {
 	 * @param ref reference Matrix
 	 * @param keyPoints
 	 */
-	public void setReferenceImage(Mat ref, KeyPoint[] keyPoints){
+	public void setReferenceImage(Mat ref, MatOfKeyPoint keyPoints, Mat descriptors){
 		reference_image = ref;
 		reference_keyPoint = keyPoints;
+		reference_Descriptors = descriptors;
 		// Store current Image with Circles
 		reference_KPImage = getMatWithKP(reference_image, reference_keyPoint);
 	}
@@ -155,9 +159,10 @@ public class TransformInfo {
 	 * @param other Other Matrix
 	 * @param keyPoints
 	 */
-	public void setOtherImage(Mat other, KeyPoint[] keyPoints){
+	public void setOtherImage(Mat other, MatOfKeyPoint keyPoints, Mat descriptors){
 		other_image = other;
 		other_keyPoint = keyPoints;
+		other_Descriptors = descriptors;
 		// Store current Image with circles
 		other_KPImage = getMatWithKP(other_image, other_keyPoint);
 	}
@@ -260,17 +265,17 @@ public class TransformInfo {
 	/**
 	 * @return null if no KeyPoints exits, or a copy of KeyPoint array
 	 */
-	public KeyPoint[] getReferenceKeyPoints(){
+	public MatOfKeyPoint getReferenceKeyPoints(){
 		return reference_keyPoint == null ? null :
-			(KeyPoint[]) reference_keyPoint.clone();
+			(MatOfKeyPoint) reference_keyPoint.clone();
 	}
 	
 	/**
 	 * @return null if no KeyPoints exits, or a copy of KeyPoint array
 	 */
-	public KeyPoint[] getOtherKeyPoints(){
+	public MatOfKeyPoint getOtherKeyPoints(){
 		return other_keyPoint == null ? null :
-			(KeyPoint[]) other_keyPoint.clone();
+			(MatOfKeyPoint) other_keyPoint.clone();
 	}
 	
 	/**
@@ -334,7 +339,7 @@ public class TransformInfo {
 	 * @requires src != null and keyPoints != null
 	 * @return new matrix with key points labeled by circles
 	 */
-	private Mat getMatWithKP(Mat src, KeyPoint[] keyPoints) {
+	private Mat getMatWithKP(Mat src, MatOfKeyPoint matKeyPoints) {
 //		Mat image = new Mat();
 //		MatOfKeyPoint keypoints = new MatOfKeyPoint();
 //		KeyPoint[] mKeypoints;
@@ -349,6 +354,7 @@ public class TransformInfo {
 //		Log.d(TAG,"number of features: " + mKeypoints.length);
 		
 		Mat image = src.clone();
+		KeyPoint[] keyPoints = matKeyPoints.toArray();
 		Point[] points = new Point[keyPoints.length];
 		for (int i = 0; i < points.length; i++) {
 			points[i] = keyPoints[i].pt;
