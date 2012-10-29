@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<annotation>
+
+    <filename>
+img_0886.jpg
+    </filename>
+
+    <folder>
+users/mhotan///appliance_images/fridgidaire_dryer
+    </folder>
+
+    <source>
+        <submittedBy>
+Michael Hotan
+        </submittedBy>
+    </source>
+
+    <imagesize>
+        <nrows>
+2448
+        </nrows>
+
+        <ncols>
+3264
+        </ncols>
+    </imagesize>
+
+    <object>
+        <name>
+main_display
+        </name>
+
+        <deleted>
+0
+        </deleted>
+
+        <verified>
+0
+        </verified>
+
+        <date>
+28-Oct-2012 21:14:59
+        </date>
+
+        <id>
+0
+        </id>
+
+        <polygon>
+            <username>
+mhotan
+            </username>
+
+            <pt>
+                <x>
+1315
+                </x>
+
+                <y>
+774
+                </y>
+            </pt>
+            <pt>
+                <x>
+1311
+                </x>
+
+                <y>
+1051
+                </y>
+            </pt>
+            <pt>
+                <x>
+1770
+                </x>
+
+                <y>
+1055
+                </y>
+            </pt>
+            <pt>
+                <x>
+1774
+                </x>
+
+                <y>
+760
+                </y>
+            </pt>
+        </polygon>
+    </object>
+    <object>
+        <name>
+cycle_type_knob
+        </name>
+
+        <deleted>
+0
+        </deleted>
+
+        <verified>
+0
+        </verified>
+
+        <date>
+28-Oct-2012 21:14:59
+        </date>
+
+        <id>
+1
+        </id>
+
+        <polygon>
+            <username>
+mhotan
+            </username>
+
+            <pt>
+                <x>
+575
+                </x>
+
+                <y>
+887
+                </y>
+            </pt>
+            <pt>
+                <x>
+688
+                </x>
+
+                <y>
+924
+                </y>
+            </pt>
+            <pt>
+                <x>
+760
+                </x>
+
+                <y>
+966
+                </y>
+            </pt>
+            <pt>
+                <x>
+815
+                </x>
+
+                <y>
+1034
+                </y>
+            </pt>
+            <pt>
+                <x>
+866
+                </x>
+
+                <y>
+1120
+                </y>
+            </pt>
+            <pt>
+                <x>
+887
+                </x>
+
+                <y>
+1287
+                </y>
+            </pt>
+            <pt>
+                <x>
+835
+                </x>
+
+                <y>
+1421
+                </y>
+            </pt>
+            <pt>
+                <x>
+664
+                </x>
+
+                <y>
+1565
+                </y>
+            </pt>
+            <pt>
+                <x>
+452
+                </x>
+
+                <y>
+1578
+                </y>
+            </pt>
+            <pt>
+                <x>
+301
+                </x>
+
+                <y>
+1506
+                </y>
+            </pt>
+            <pt>
+                <x>
+181
+                </x>
+
+                <y>
+1287
+                </y>
+            </pt>
+            <pt>
+                <x>
+195
+                </x>
+
+                <y>
+1102
+                </y>
+            </pt>
+            <pt>
+                <x>
+257
+                </x>
+
+                <y>
+1003
+                </y>
+            </pt>
+            <pt>
+                <x>
+356
+                </x>
+
+                <y>
+928
+                </y>
+            </pt>
+            <pt>
+                <x>
+455
+                </x>
+
+                <y>
+890
+                </y>
+            </pt>
+        </polygon>
+    </object>
+    <object>
+        <name>
+main_console
+        </name>
+
+        <deleted>
+0
+        </deleted>
+
+        <verified>
+0
+        </verified>
+
+        <date>
+28-Oct-2012 21:14:59
+        </date>
+
+        <id>
+2
+        </id>
+
+        <polygon>
+            <username>
+mhotan
+            </username>
+
+            <pt>
+                <x>
+1181
+                </x>
+
+                <y>
+664
+                </y>
+            </pt>
+            <pt>
+                <x>
+1195
+                </x>
+
+                <y>
+1548
+                </y>
+            </pt>
+            <pt>
+                <x>
+1226
+                </x>
+
+                <y>
+1616
+                </y>
+            </pt>
+            <pt>
+                <x>
+1277
+                </x>
+
+                <y>
+1637
+                </y>
+            </pt>
+            <pt>
+                <x>
+1684
+                </x>
+
+                <y>
+1767
+                </y>
+            </pt>
+            <pt>
+                <x>
+1972
+                </x>
+
+                <y>
+1753
+                </y>
+            </pt>
+            <pt>
+                <x>
+2999
+                </x>
+
+                <y>
+1640
+                </y>
+            </pt>
+            <pt>
+                <x>
+3047
+                </x>
+
+                <y>
+1633
+                </y>
+            </pt>
+            <pt>
+                <x>
+3078
+                </x>
+
+                <y>
+1613
+                </y>
+            </pt>
+            <pt>
+                <x>
+3102
+                </x>
+
+                <y>
+1578
+                </y>
+            </pt>
+            <pt>
+                <x>
+3109
+                </x>
+
+                <y>
+1544
+                </y>
+            </pt>
+            <pt>
+                <x>
+3143
+                </x>
+
+                <y>
+633
+                </y>
+            </pt>
+        </polygon>
+    </object>
+
+</annotation>
