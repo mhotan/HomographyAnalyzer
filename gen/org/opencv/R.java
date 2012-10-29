@@ -10,16 +10,19 @@ package org.opencv;
 public final class R {
     public static final class attr {
     }
+    public static final class bool {
+        public static final int TRUE=0x7f050000;
+    }
     public static final class color {
-        public static final int default_background=0x7f040000;
-        public static final int default_text_color=0x7f040001;
+        public static final int default_background=0x7f060000;
+        public static final int default_text_color=0x7f060001;
     }
     public static final class dimen {
-        public static final int default_text_size=0x7f050004;
-        public static final int image_margin_from_border=0x7f050000;
-        public static final int padding_large=0x7f050001;
-        public static final int padding_medium=0x7f050002;
-        public static final int padding_small=0x7f050003;
+        public static final int default_text_size=0x7f070004;
+        public static final int image_margin_from_border=0x7f070000;
+        public static final int padding_large=0x7f070001;
+        public static final int padding_medium=0x7f070002;
+        public static final int padding_small=0x7f070003;
     }
     public static final class drawable {
         public static final int ic_action_photo=0x7f020000;
@@ -33,71 +36,77 @@ public final class R {
         public static final int navigation_previous_item=0x7f020008;
     }
     public static final class id {
-        public static final int base_image_view=0x7f0a0001;
-        public static final int btnToggle=0x7f0a0016;
-        public static final int button1=0x7f0a0000;
-        public static final int choose_picture_button=0x7f0a0013;
-        public static final int content=0x7f0a0007;
-        public static final int exp_image=0x7f0a000d;
-        public static final int exp_image_text=0x7f0a000c;
-        public static final int features=0x7f0a000e;
-        public static final int gallery=0x7f0a000a;
-        public static final int gridview=0x7f0a0004;
-        public static final int handle=0x7f0a0008;
-        public static final int homography_methods=0x7f0a000f;
-        public static final int imageRetrieverButton=0x7f0a000b;
-        public static final int imagegrid=0x7f0a0005;
-        public static final int imgDisplay=0x7f0a0003;
-        public static final int imgView1=0x7f0a0014;
-        public static final int imgView2=0x7f0a0015;
-        public static final int menu_settings=0x7f0a0017;
-        public static final int query_image_view=0x7f0a0002;
-        public static final int slidingDrawer=0x7f0a0006;
-        public static final int take_picture_button=0x7f0a0012;
-        public static final int threshhold_seekbar_textview=0x7f0a0010;
-        public static final int threshold_seekbar=0x7f0a0011;
-        public static final int transformButton=0x7f0a0009;
+        public static final int base_image_view=0x7f0c0001;
+        public static final int btnToggle=0x7f0c0018;
+        public static final int button1=0x7f0c0000;
+        public static final int choose_picture_button=0x7f0c0015;
+        public static final int content=0x7f0c0009;
+        public static final int exp_image=0x7f0c000f;
+        public static final int exp_image_text=0x7f0c000e;
+        public static final int feature_label_gallery=0x7f0c0004;
+        public static final int feature_label_switcher=0x7f0c0005;
+        public static final int features=0x7f0c0010;
+        public static final int gallery=0x7f0c000c;
+        public static final int gridview=0x7f0c0006;
+        public static final int handle=0x7f0c000a;
+        public static final int homography_methods=0x7f0c0011;
+        public static final int imageRetrieverButton=0x7f0c000d;
+        public static final int imagegrid=0x7f0c0007;
+        public static final int imgDisplay=0x7f0c0003;
+        public static final int imgView1=0x7f0c0016;
+        public static final int imgView2=0x7f0c0017;
+        public static final int menu_settings=0x7f0c0019;
+        public static final int query_image_view=0x7f0c0002;
+        public static final int slidingDrawer=0x7f0c0008;
+        public static final int take_picture_button=0x7f0c0014;
+        public static final int threshhold_seekbar_textview=0x7f0c0012;
+        public static final int threshold_seekbar=0x7f0c0013;
+        public static final int transformButton=0x7f0c000b;
     }
     public static final class integer {
-        public static final int number_images=0x7f060000;
-        public static final int one=0x7f060001;
+        public static final int number_images=0x7f080000;
+        public static final int one=0x7f080001;
     }
     public static final class layout {
         public static final int activity_homography=0x7f030000;
         public static final int display=0x7f030001;
-        public static final int image_chooser_layout2=0x7f030002;
-        public static final int image_selector=0x7f030003;
-        public static final int main=0x7f030004;
-        public static final int picture_chooser_layout=0x7f030005;
-        public static final int sidebysidedisplay=0x7f030006;
-        public static final int transformoptions=0x7f030007;
+        public static final int feature_label_layout=0x7f030002;
+        public static final int image_chooser_layout2=0x7f030003;
+        public static final int image_selector=0x7f030004;
+        public static final int main=0x7f030005;
+        public static final int picture_chooser_layout=0x7f030006;
+        public static final int sidebysidedisplay=0x7f030007;
+        public static final int transformoptions=0x7f030008;
     }
     public static final class menu {
-        public static final int activity_homography=0x7f090000;
-        public static final int activity_transform_result=0x7f090001;
+        public static final int activity_homography=0x7f0b0000;
+        public static final int activity_transform_result=0x7f0b0001;
     }
     public static final class string {
-        public static final int app_name=0x7f070000;
-        public static final int base_img_descriptor=0x7f070006;
-        public static final int drawer_descriptor=0x7f07000a;
-        public static final int exp_image_description=0x7f07000f;
-        public static final int handle_label=0x7f070009;
-        public static final int hello_world=0x7f070001;
-        public static final int image_grid=0x7f070008;
-        public static final int menu_settings=0x7f070002;
-        public static final int picture_chooser_descriptor=0x7f070004;
-        public static final int picture_taker_descriptor=0x7f070005;
-        public static final int query_img_descriptor=0x7f070007;
-        public static final int select_intro=0x7f07000d;
-        public static final int show_exp_image=0x7f07000e;
-        public static final int slider_button=0x7f07000b;
-        public static final int threshhold_seekbar_label=0x7f070011;
-        public static final int title_activity_homography=0x7f070003;
-        public static final int title_activity_transform_result=0x7f07000c;
-        public static final int transform=0x7f070010;
+        public static final int app_name=0x7f090000;
+        public static final int base_img_descriptor=0x7f090006;
+        public static final int drawer_descriptor=0x7f09000a;
+        public static final int exp_image_description=0x7f09000f;
+        public static final int handle_label=0x7f090009;
+        public static final int hello_world=0x7f090001;
+        public static final int image_grid=0x7f090008;
+        public static final int menu_settings=0x7f090002;
+        public static final int picture_chooser_descriptor=0x7f090004;
+        public static final int picture_taker_descriptor=0x7f090005;
+        public static final int query_img_descriptor=0x7f090007;
+        public static final int select_intro=0x7f09000d;
+        public static final int show_exp_image=0x7f09000e;
+        public static final int slider_button=0x7f09000b;
+        public static final int threshhold_seekbar_label=0x7f090011;
+        public static final int title_activity_homography=0x7f090003;
+        public static final int title_activity_transform_result=0x7f09000c;
+        public static final int transform=0x7f090010;
     }
     public static final class style {
-        public static final int AppTheme=0x7f080000;
+        public static final int AppTheme=0x7f0a0000;
+    }
+    public static final class xml {
+        public static final int frigidaire_dryer_faqe7072lw=0x7f040000;
     }
     public static final class styleable {
         /** Attributes that can be used with a PicGallery.
