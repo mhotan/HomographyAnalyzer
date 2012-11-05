@@ -1,7 +1,5 @@
 package edu.uw.homographyanalyzer.main;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -9,6 +7,7 @@ import java.util.List;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
+import org.xmlpull.v1.XmlPullParserException;
 
 import android.app.Activity;
 import android.content.Context;
@@ -20,7 +19,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.util.Pair;
 import android.view.Menu;
-import android.view.TextureView;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -29,24 +27,22 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Gallery;
-import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
-import android.widget.SlidingDrawer;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.homographyanalyzer.R;
 
+import edu.uw.homographyanalyzer.api.XMLTestImageSet;
 import edu.uw.homographyanalyzer.camera.BaseImageTaker;
 import edu.uw.homographyanalyzer.camera.ExternalApplication;
 import edu.uw.homographyanalyzer.global.GlobalLogger;
 import edu.uw.homographyanalyzer.global.LoggerInterface;
 import edu.uw.homographyanalyzer.quicktransform.TransformInfo;
-import edu.uw.homographyanalyzer.quicktransform.TransformationDemoActivity;
 import edu.uw.homographyanalyzer.reusable.ComputerVision;
 import edu.uw.homographyanalyzer.reusable.ComputerVisionCallback;
 import edu.uw.homographyanalyzer.reusable.TransformationBuilder;
@@ -145,6 +141,18 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		// Test
+		try {
+			new XMLTestImageSet(this, R.xml.frigidaire_dryer_faqe7072lw, 0);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (XmlPullParserException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		setContentView(R.layout.main);
 		// This needs to be done first because many other components
 		// depend on this global logger

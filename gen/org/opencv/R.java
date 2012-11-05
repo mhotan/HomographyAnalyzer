@@ -22,15 +22,16 @@ public final class R {
         public static final int padding_small=0x7f060003;
     }
     public static final class drawable {
-        public static final int ic_action_photo=0x7f020000;
-        public static final int ic_action_search=0x7f020001;
-        public static final int ic_action_search_dark=0x7f020002;
-        public static final int ic_action_select_all=0x7f020003;
-        public static final int ic_launcher=0x7f020004;
-        public static final int navigation_collapse=0x7f020005;
-        public static final int navigation_expand=0x7f020006;
-        public static final int navigation_next_item=0x7f020007;
-        public static final int navigation_previous_item=0x7f020008;
+        public static final int ge_microwave=0x7f020000;
+        public static final int ic_action_photo=0x7f020001;
+        public static final int ic_action_search=0x7f020002;
+        public static final int ic_action_search_dark=0x7f020003;
+        public static final int ic_action_select_all=0x7f020004;
+        public static final int ic_launcher=0x7f020005;
+        public static final int navigation_collapse=0x7f020006;
+        public static final int navigation_expand=0x7f020007;
+        public static final int navigation_next_item=0x7f020008;
+        public static final int navigation_previous_item=0x7f020009;
     }
     public static final class id {
         public static final int base_image_view=0x7f0b0001;
