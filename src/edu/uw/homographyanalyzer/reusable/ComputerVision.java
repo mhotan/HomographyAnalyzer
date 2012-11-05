@@ -12,12 +12,12 @@ import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.features2d.DMatch;
 import org.opencv.features2d.DescriptorExtractor;
+import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.features2d.KeyPoint;
 import org.opencv.imgproc.Imgproc;
-
-import edu.uw.homographyanalyzer.tools.Utility;
 
 import android.app.Activity;
 import android.content.Context;
@@ -143,28 +143,62 @@ public class ComputerVision {
 	 * of the same perspective as the reference.
 	 * RANSAC method is used.
 	 */
-	public Mat findHomography(MatOfKeyPoint referenceKeyPoints, MatOfKeyPoint otherKeyPoint,
-								Mat refDescriptor, Mat otherDescriptor
-								,int ransac_treshold){
-		// Intermediate data structures expected by the findHomography function
-		// provided by the library
-		Point[] referencePoints, otherPoints;
-		MatOfPoint2f matReference, matOther;
-		Mat result;
+	public synchronized Mat findHomography(MatOfPoint2f referenceKeyPoints, MatOfPoint2f otherKeyPoint,
+			int method, int ransac_treshold){
 		
-		MatOfDMatch matches = Utility.getMatchingCorrespondences(
-				refDescriptor, otherDescriptor); 
+		return Calib3d.findHomography(otherKeyPoint, referenceKeyPoints,
+				method, ransac_treshold);
+	}
+	
+	/*
+	 * Given two descriptors, compute the matches
+	 */
+	public synchronized MatOfDMatch getMatchingCorrespondences(Mat queryDescriptors,
+			Mat trainDescriptors) {
+		// Holds the result
+		MatOfDMatch matches = new MatOfDMatch();
+		// Flann-based descriptor
+		DescriptorMatcher dm = DescriptorMatcher
+				.create(DescriptorMatcher.BRUTEFORCE_SL2);
+		// Compute matches
+		dm.match(queryDescriptors, trainDescriptors, matches);
+
+		return matches;
+	}
+
+	/*
+	 * Given a feature descriptor, a MatOfDmatch, which describes the reference
+	 * and target image and also MatOfKeyPoint for the reference and the target
+	 * image, this method returns MatOfPoints2f for the reference and target
+	 * image to be used for homography computation
+	 * 
+	 * Return: [0] = reference
+	 *         [1] = target
+	 */
+	public synchronized MatOfPoint2f[] getCorrespondences(MatOfDMatch descriptors,
+			MatOfKeyPoint ref_kp, MatOfKeyPoint tgt_kp) {
+
+		// The source of computation
+		DMatch[] descriptors_array = descriptors.toArray();
+		KeyPoint[] ref_kp_array = ref_kp.toArray();
+		KeyPoint[] tgt_kp_array = tgt_kp.toArray();
+
+		// The result
+		Point[] ref_pts_array = new Point[descriptors_array.length];
+		Point[] tgt_pts_array = new Point[descriptors_array.length];
+
+		for (int i = 0; i < descriptors_array.length; i++) {
+			ref_pts_array[i] = ref_kp_array[descriptors_array[i].trainIdx].pt;
+			tgt_pts_array[i] = tgt_kp_array[descriptors_array[i].queryIdx].pt;
+		}
 		
+		MatOfPoint2f ref_pts = new MatOfPoint2f(ref_pts_array);
+		MatOfPoint2f tgt_pts = new MatOfPoint2f(tgt_pts_array);
 		
-		
-		referencePoints = convertMatOfKeyPointToPointArray(referenceKeyPoints);
-		otherPoints = convertMatOfKeyPointToPointArray(otherKeyPoint);
-		matReference = new MatOfPoint2f(referencePoints);
-		matOther = new MatOfPoint2f(otherPoints);
-		
-		result = Calib3d.findHomography(matReference, matOther, Calib3d.RANSAC, ransac_treshold);
-		
-		return result;
+		MatOfPoint2f[] results = new MatOfPoint2f[2];
+		results[0] = ref_pts;
+		results[1] = tgt_pts;
+		return results;
 	}
 	
 	/*

@@ -1,33 +1,24 @@
 package edu.uw.homographyanalyzer.reusable;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
 import org.opencv.android.Utils;
 import org.opencv.calib3d.Calib3d;
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.FeatureDetector;
-import org.opencv.features2d.KeyPoint;
-import org.opencv.imgproc.Imgproc;
-import edu.uw.homographyanalyzer.quicktransform.Data;
-import edu.uw.homographyanalyzer.quicktransform.TransformInfo;
 
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
-import android.provider.CalendarContract.Attendees;
 import android.util.Log;
 import android.util.Pair;
+import edu.uw.homographyanalyzer.quicktransform.TransformInfo;
 
 /**
  * Class that is able to build a homography trasnformation between to images
@@ -112,12 +103,12 @@ public class TransformationBuilder {
 		// Do a transformation with non inverted map
 		Mat refMat = storage.getReferenceMatrix();
 
-		Mat result = ComputerVision.getWarpedImage(refMat, homography, false);
+		Mat result = ComputerVision.getWarpedImage(refMat, homography, true);
 		Bitmap disp = Bitmap.createBitmap(result.cols(), result.rows(),
 				Bitmap.Config.ARGB_8888); // Android uses ARGB_8888
 		Utils.matToBitmap(result, disp);
 
-		Mat resultInv = ComputerVision.getWarpedImage(refMat, homography, true);
+		Mat resultInv = ComputerVision.getWarpedImage(refMat, homography, false);
 		Bitmap dispInv = Bitmap.createBitmap(resultInv.cols(), result.rows(),
 				Bitmap.Config.ARGB_8888); // Android uses ARGB_8888
 		Utils.matToBitmap(resultInv, dispInv);
@@ -296,13 +287,13 @@ public class TransformationBuilder {
 		 */
 		@Override
 		protected Pair<MatOfKeyPoint, Mat> doInBackground(Void... params) {
-			MatOfKeyPoint mat = mCV.findKeyPoints(mFd, mImg);
+			MatOfKeyPoint matKeyPoints = mCV.findKeyPoints(mFd, mImg);
 			// Compute the feature 
 			Mat descriptors = new Mat();
-			getCurrentDescriptorExtractor().compute(mImg, mat, descriptors);
-			
-			return new Pair<MatOfKeyPoint, Mat>(mat, descriptors);
+			getCurrentDescriptorExtractor().compute(mImg, matKeyPoints, descriptors);
+			return new Pair<MatOfKeyPoint, Mat>(matKeyPoints, descriptors);
 		}
+		
 		//Runs on main thread
 		@Override
 		protected void onPostExecute(Pair<MatOfKeyPoint, Mat> result){
@@ -335,7 +326,12 @@ public class TransformationBuilder {
 		private final FeatureDetector detector;
 		private final int tranformMethod, threshhold;
 
+		/**
+		 * Creates a new task to run
+		 * @param info stores all the pertinent information needed to find homography
+		 */
 		public AsyncHomographyProcessor(TransformInfo info){
+			//Create copies or use immutable objects
 			tempStorage = info.clone();
 			detector = getCurrentFeatureDetector();
 			tranformMethod = mHomographyMethods.get(mHomographyMethod);
@@ -346,33 +342,27 @@ public class TransformationBuilder {
 		protected Boolean doInBackground(Void... params) {
 			publishProgress();
 			// Process Homography
-
-			Mat refMat = tempStorage.getReferenceMatrix();
-			Mat otherMat = tempStorage.getOtherMatrix();
-
+			Mat[] descriptors = tempStorage.getDescriptors();
+			// TODO Dohandle error case where list is empty
+			if (descriptors.length == 0) {
+				// Do something
+			}
 			
+			// 
+			MatOfDMatch matches = mCV.getMatchingCorrespondences(
+					descriptors[1], descriptors[0]);
 			
-			// Data structures needed
-			// The 2 matrices put to a list
-			List<Mat> listMatrixes = new LinkedList<Mat>();
-			listMatrixes.add(refMat);
-			listMatrixes.add(otherMat);
-
-			// List that holds the resulting keypoints
-			List<Point[]> matchedPoints = mCV.findKeyPointMatches(
-					detector, listMatrixes);
-
-			Point[] refMatches = matchedPoints.get(0);
-			Point[] otherMatches = matchedPoints.get(1);
-
+			MatOfPoint2f[] matchedPnts = mCV.getCorrespondences(matches,
+					tempStorage.getReferenceKeyPoints(), tempStorage.getOtherKeyPoints());
+			
 			// Calculate the matched points
 			// Store Corresponding matched points
-			tempStorage.setPutativeMatches(refMatches, otherMatches);
+			tempStorage.setPutativeMatches(matchedPnts[0], matchedPnts[1]);
 
 			// Convert points to MAt for calculation
 			// Find homography 
-			Mat homography = mCV.findHomography(refMatches, 
-					otherMatches, tranformMethod, threshhold);
+			Mat homography = mCV.findHomography(matchedPnts[0], 
+					matchedPnts[1], tranformMethod, threshhold);
 
 			// Store Homography
 			tempStorage.setHomographyMatrix(homography);

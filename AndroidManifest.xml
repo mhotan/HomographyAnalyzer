@@ -18,25 +18,16 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name="edu.uw.homographyanalyzer.main.MainActivity"
-            android:label="@string/title_activity_homography" >
+            android:label="@string/title_activity_homography" android:theme="@android:style/Theme.Holo">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="edu.uw.homographyanalyzer.camera.ExternalApplication" >
+        <activity android:name="edu.uw.homographyanalyzer.camera.ExternalApplication" android:theme="@android:style/Theme.Holo">
         </activity>
         <activity android:name="edu.uw.homographyanalyzer.quicktransform.TransformationDemoActivity" >
-        </activity>
-        <activity
-            android:name="edu.uw.homographyanalyzer.main.TransformResultActivity"
-            android:label="@string/title_activity_transform_result" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
     </application>
 

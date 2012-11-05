@@ -7,6 +7,7 @@ import java.util.List;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.features2d.KeyPoint;
@@ -64,8 +65,10 @@ public class TransformInfo {
 	// Bitmaps of reference and other images with keypoints
 	private Mat reference_KPImage, other_KPImage;
 	
+	private MatOfPoint2f reference_matched_points;
+
 	// Point matches stored in sequential order
-	private Point[] reference_matched_points, other_matched_points;
+	private MatOfPoint2f other_matched_points;
 	
 	//public Mat reference_mat, other_mat;
 	private Mat homography;
@@ -174,12 +177,12 @@ public class TransformInfo {
 	/**
 	 * Store matches from reference to other matches
 	 * @requires neither argument is null
-	 * @param referenceMatches matches on referencs image
-	 * @param otherMatches matches on other image
+	 * @param matchedPnts matches on referencs image
+	 * @param matchedPnts2 matches on other image
 	 */
-	public void setPutativeMatches(Point[] referenceMatches, Point[] otherMatches){
-		reference_matched_points = referenceMatches;
-		other_matched_points = otherMatches;
+	public void setPutativeMatches(MatOfPoint2f matchedPnts, MatOfPoint2f matchedPnts2){
+		reference_matched_points = matchedPnts;
+		other_matched_points = matchedPnts2;
 	}
 	
 	/**
@@ -271,7 +274,7 @@ public class TransformInfo {
 	 */
 	public MatOfKeyPoint getReferenceKeyPoints(){
 		return reference_keyPoint == null ? null :
-			(MatOfKeyPoint) reference_keyPoint.clone();
+			new MatOfKeyPoint(reference_keyPoint);
 	}
 	
 	/**
@@ -279,7 +282,7 @@ public class TransformInfo {
 	 */
 	public MatOfKeyPoint getOtherKeyPoints(){
 		return other_keyPoint == null ? null :
-			(MatOfKeyPoint) other_keyPoint.clone();
+			new MatOfKeyPoint(other_keyPoint);
 	}
 	
 	/**
@@ -306,14 +309,14 @@ public class TransformInfo {
 	 * pair.second = points on the other image
 	 * @return pair of Point[] of matches or null id there is stored arrays
 	 */
-	public Pair<Point[],Point[]> getMatchPoints(){
+	public Pair<MatOfPoint2f,MatOfPoint2f> getMatchPoints(){
 		if (reference_matched_points == null ||
 				other_matched_points == null)
 			return null;
 		
-		Pair<Point[],Point[]> p = new Pair<Point[],Point[]>(
-				(Point[])reference_matched_points.clone(),
-				(Point[])other_matched_points.clone());
+		Pair<MatOfPoint2f,MatOfPoint2f> p = new Pair<MatOfPoint2f,MatOfPoint2f>(
+				(MatOfPoint2f)reference_matched_points.clone(),
+				(MatOfPoint2f)other_matched_points.clone());
 		return p;
 	}
 	
@@ -323,12 +326,12 @@ public class TransformInfo {
 	 * 
 	 * @return empty list if no reference image exist, or list containing descriptors
 	 */
-	public List<Mat> getDescriptors(){
-		List<Mat> list = new ArrayList<Mat>();
-		if (reference_Descriptors == null) return list;
-		list.add(reference_Descriptors);
-		list.add(other_Descriptors);
-		return list;
+	public Mat[] getDescriptors(){
+		if (reference_Descriptors == null) return new Mat[0];
+		Mat[] m = new Mat[2];
+		m[0] = reference_Descriptors.clone();
+		m[1] = other_Descriptors.clone();
+		return m;
 	}
 
 	/**
