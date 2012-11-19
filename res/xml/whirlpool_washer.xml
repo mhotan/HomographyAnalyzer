@@ -1,0 +1,92 @@
+<annotation>
+
+    <filename>
+img_0863.jpg
+    </filename>
+
+    <folder>
+users/mhotan//whirlpool_washer
+    </folder>
+
+    <source>
+        <submittedBy>
+Michael Hotan
+        </submittedBy>
+    </source>
+
+    <imagesize>
+        <nrows>
+1836
+        </nrows>
+
+        <ncols>
+2448
+        </ncols>
+    </imagesize>
+
+    <object>
+        <name>
+display
+        </name>
+
+        <deleted>
+0
+        </deleted>
+
+        <verified>
+0
+        </verified>
+
+        <date>
+19-Nov-2012 06:50:14
+        </date>
+
+        <id>
+0
+        </id>
+
+        <polygon>
+            <username>
+mhotan
+            </username>
+
+            <pt>
+                <x>
+539
+                </x>
+
+                <y>
+306
+                </y>
+            </pt>
+            <pt>
+                <x>
+529
+                </x>
+
+                <y>
+569
+                </y>
+            </pt>
+            <pt>
+                <x>
+866
+                </x>
+
+                <y>
+560
+                </y>
+            </pt>
+            <pt>
+                <x>
+866
+                </x>
+
+                <y>
+297
+                </y>
+            </pt>
+        </polygon>
+    </object>
+
+</annotation>
