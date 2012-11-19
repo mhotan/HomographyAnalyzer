@@ -114,6 +114,10 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 	public static final String BASE_URI_EXTRA = TAG + "BASE_URI";
 	public static final String QUERY_URI_EXTRA = TAG + "QUERY_URI";
 
+	//Target width for reading bitmaps in 
+	private static final int TARGET_WIDTH = 600;
+	private static final int TARGET_HEIGHT= 800;
+	
 	// adapter to display images
 	private OrganizedImageSelectionAdapter mImageAdapter;
 
@@ -142,17 +146,17 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		// Test
-		try {
-			new XMLTestImageSet(this, R.xml.frigidaire_dryer_faqe7072lw, 0);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (XmlPullParserException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+//		// Test
+//		try {
+//			new XMLTestImageSet(this, R.xml.frigidaire_dryer_faqe7072lw, 0);
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (XmlPullParserException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		
 		setContentView(R.layout.main);
 		// This needs to be done first because many other components
 		// depend on this global logger
@@ -321,9 +325,11 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 			image = getBitmapFromURIviaInputStream(pickedUri);
 
 		} else{
-			int targetWidth = 600;
-			int targetHeight = 400;
+			// Assign target dimension to read in images
+			int targetWidth = TARGET_WIDTH;
+			int targetHeight = TARGET_HEIGHT;
 
+			
 			BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
 			bmpOptions.inJustDecodeBounds = true;
 			BitmapFactory.decodeFile(filePath, bmpOptions);
@@ -484,6 +490,9 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 		}
 	}
 
+	/**
+	 * 
+	 */
 	@Override
 	public void onItemSelected(AdapterView<?> spinner, View arg1, int pos,
 			long arg3) {

@@ -76,7 +76,7 @@ public class TransformationBuilder {
 		mCV = cv;
 		storage = new TransformInfo();
 		// Initialize feature detector to default
-		setFeatureDetector(FAST);
+		setFeatureDetector(ORB);
 		//Initialize Homography to default
 		setHomograhyMethod(RANSAC);
 		setRansacThreshhold(1);

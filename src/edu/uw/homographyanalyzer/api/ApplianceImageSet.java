@@ -31,7 +31,7 @@ public abstract class ApplianceImageSet {
 	 * @param featureName Name of feature
 	 * @param points List of points
 	 */
-	public void addFeature(String featureName,  List<Point> points){
+	protected void addFeature(String featureName,  List<Point> points){
 		if (featureName.length() == 0)
 			throw new IllegalArgumentException("Feature name Empty: \"" + featureName +"\"");
 		if (points.size() <= 2)
