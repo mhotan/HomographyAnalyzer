@@ -241,6 +241,10 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 		});
 	}
 
+	/**
+	 * Initializes the features drop down menu in sliding menu 
+	 * @param s Spinner to contain all Feaatures
+	 */
 	private void initializeFeatures(Spinner s){
 		List<String> list = new ArrayList<String>(TransformationBuilder.getSupportedFeatureDetectorNames());
 		ArrayAdapter<String> dataAdapter = 
@@ -261,6 +265,10 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 		s.setOnItemSelectedListener(this);
 	}
 
+	/**
+	 * Initializes the Methods drop down menu in sliding menu 
+	 * @param s Spinner to contain all Methods
+	 */
 	private void initializeMethods(Spinner s){
 		List<String> list = new ArrayList<String>(TransformationBuilder.getHomographyMethodNames());
 		ArrayAdapter<String> dataAdapter = 
@@ -374,8 +382,8 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 
 		Bitmap image = null;
 		try {
-			int targetWidth = 600;
-			int targetHeight = 400;
+			int targetWidth = TARGET_WIDTH;
+			int targetHeight = TARGET_HEIGHT;
 
 			BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
 			bmpOptions.inJustDecodeBounds = true;
@@ -534,6 +542,14 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 
 	@Override
 	public void OnHomographyStored(TransformInfo storage) {
+		// Draw the key point matches and put in gallery
+		Mat matches = storage.getMatchImage();
+		// Must convert to Bitmap from Mat
+		Bitmap disp = Bitmap.createBitmap(matches.cols(), matches.rows(),
+				Bitmap.Config.ARGB_8888); // Android uses ARGB_8888
+		Utils.matToBitmap(matches, disp);
+		mImageAdapter.setPutativeImageWithLinesImage(disp);
+		
 		// Ready to show display reset text
 		mExpandedImageText.setText(R.string.show_exp_image);
 		boolean ready = mCVLibraryInitialized;

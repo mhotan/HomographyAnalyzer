@@ -12,7 +12,7 @@ import android.graphics.Bitmap;
 /**
  * Container abstract class to represent a set of images that correspond to a complete Appliance
  * <b>It must contain a reference image that must be properly annotated</b> 
- * <b>It can contain a set of other images that are perspectie warps of reference image </b>
+ * <b>It can contain a set of other images that are perspective warps of reference image </b>
  * 
  * @author mhotan
  */

@@ -6,10 +6,12 @@ import java.util.List;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
+import org.opencv.features2d.Features2d;
 import org.opencv.features2d.KeyPoint;
 
 import android.graphics.Bitmap;
@@ -65,10 +67,8 @@ public class TransformInfo {
 	// Bitmaps of reference and other images with keypoints
 	private Mat reference_KPImage, other_KPImage;
 	
-	private MatOfPoint2f reference_matched_points;
-
-	// Point matches stored in sequential order
-	private MatOfPoint2f other_matched_points;
+	// Matches of
+	private MatOfDMatch matches;
 	
 	//public Mat reference_mat, other_mat;
 	private Mat homography;
@@ -93,8 +93,8 @@ public class TransformInfo {
 		clone.other_keyPoint = other_keyPoint;
 		clone.reference_KPImage = reference_KPImage;
 		clone.other_KPImage = other_KPImage;
-		clone.reference_matched_points = reference_matched_points;
-		clone.other_matched_points = other_matched_points;
+		clone.matches = matches;
+//		clone.other_matched_points = other_matched_points;
 		clone.homography = homography;
 		clone.generalPhotos.addAll(generalPhotos);
 		clone.reference_Descriptors = reference_Descriptors;
@@ -120,8 +120,7 @@ public class TransformInfo {
 		other_keyPoint = null;
 		reference_KPImage = null;
 		other_KPImage = null;
-		reference_matched_points = null;
-		other_matched_points = null;
+		matches = null;
 		homography = null;
 		other_Descriptors = null;
 		reference_Descriptors = null;
@@ -180,9 +179,8 @@ public class TransformInfo {
 	 * @param matchedPnts matches on referencs image
 	 * @param matchedPnts2 matches on other image
 	 */
-	public void setPutativeMatches(MatOfPoint2f matchedPnts, MatOfPoint2f matchedPnts2){
-		reference_matched_points = matchedPnts;
-		other_matched_points = matchedPnts2;
+	public void setPutativeMatches(MatOfDMatch matches){
+		this.matches = matches;
 	}
 	
 	/**
@@ -304,21 +302,36 @@ public class TransformInfo {
 	}
 	
 	/**
-	 * Returns a pair of two Point array
-	 * pair.first = points on the reference image
-	 * pair.second = points on the other image
-	 * @return pair of Point[] of matches or null id there is stored arrays
+	 * Using the images stored in t
+	 * @return null if no images exist or an image of two images of same appliance
 	 */
-	public Pair<MatOfPoint2f,MatOfPoint2f> getMatchPoints(){
-		if (reference_matched_points == null ||
-				other_matched_points == null)
-			return null;
-		
-		Pair<MatOfPoint2f,MatOfPoint2f> p = new Pair<MatOfPoint2f,MatOfPoint2f>(
-				(MatOfPoint2f)reference_matched_points.clone(),
-				(MatOfPoint2f)other_matched_points.clone());
-		return p;
+	public Mat getMatchImage(){
+		if (matches == null || reference_image == null || 
+				other_image == null || reference_keyPoint == null 
+				|| other_keyPoint == null)
+		return null;
+		Mat output = new Mat();
+		Features2d.drawMatches(reference_image, reference_keyPoint, 
+				other_image, other_keyPoint, matches, output);
+		return output;
 	}
+	
+//	/**
+//	 * Returns a pair of two Point array
+//	 * pair.first = points on the reference image
+//	 * pair.second = points on the other image
+//	 * @return pair of Point[] of matches or null id there is stored arrays
+//	 */
+//	public Pair<MatOfPoint2f,MatOfPoint2f> getMatchPoints(){
+//		if (reference_matched_points == null ||
+//				other_matched_points == null)
+//			return null;
+//		
+//		Pair<MatOfPoint2f,MatOfPoint2f> p = new Pair<MatOfPoint2f,MatOfPoint2f>(
+//				(MatOfPoint2f)reference_matched_points.clone(),
+//				(MatOfPoint2f)other_matched_points.clone());
+//		return p;
+//	}
 	
 	/**
 	 * Returns a list of descriptors defined by current images

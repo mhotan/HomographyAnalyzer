@@ -1,0 +1,92 @@
+<annotation>
+
+    <filename>
+1_ref.jpg
+    </filename>
+
+    <folder>
+users/mhotan//russel_stove
+    </folder>
+
+    <source>
+        <submittedBy>
+Michael Hotan
+        </submittedBy>
+    </source>
+
+    <imagesize>
+        <nrows>
+1652
+        </nrows>
+
+        <ncols>
+2203
+        </ncols>
+    </imagesize>
+
+    <object>
+        <name>
+display
+        </name>
+
+        <deleted>
+0
+        </deleted>
+
+        <verified>
+0
+        </verified>
+
+        <date>
+19-Nov-2012 05:16:14
+        </date>
+
+        <id>
+0
+        </id>
+
+        <polygon>
+            <username>
+mhotan
+            </username>
+
+            <pt>
+                <x>
+609
+                </x>
+
+                <y>
+507
+                </y>
+            </pt>
+            <pt>
+                <x>
+1451
+                </x>
+
+                <y>
+523
+                </y>
+            </pt>
+            <pt>
+                <x>
+1437
+                </x>
+
+                <y>
+840
+                </y>
+            </pt>
+            <pt>
+                <x>
+598
+                </x>
+
+                <y>
+818
+                </y>
+            </pt>
+        </polygon>
+    </object>
+
+</annotation>

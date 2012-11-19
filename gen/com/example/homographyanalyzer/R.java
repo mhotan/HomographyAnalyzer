@@ -70,8 +70,9 @@ public final class R {
         public static final int image_selector=0x7f030003;
         public static final int main=0x7f030004;
         public static final int picture_chooser_layout=0x7f030005;
-        public static final int sidebysidedisplay=0x7f030006;
-        public static final int transformoptions=0x7f030007;
+        public static final int russel_stove=0x7f030006;
+        public static final int sidebysidedisplay=0x7f030007;
+        public static final int transformoptions=0x7f030008;
     }
     public static final class menu {
         public static final int activity_homography=0x7f0a0000;
@@ -102,6 +103,8 @@ public final class R {
     }
     public static final class xml {
         public static final int frigidaire_dryer_faqe7072lw=0x7f040000;
+        public static final int russel_stove=0x7f040001;
+        public static final int supported_appliances_ocr=0x7f040002;
     }
     public static final class styleable {
         /** Attributes that can be used with a PicGallery.

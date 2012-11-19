@@ -357,7 +357,7 @@ public class TransformationBuilder {
 			
 			// Calculate the matched points
 			// Store Corresponding matched points
-			tempStorage.setPutativeMatches(matchedPnts[0], matchedPnts[1]);
+			tempStorage.setPutativeMatches(matches);
 
 			// Convert points to MAt for calculation
 			// Find homography 
