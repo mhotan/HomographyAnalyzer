@@ -3,7 +3,6 @@ package edu.uw.homographyanalyzer.api;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.graphics.Path;
 import android.graphics.Point;
 
 /**

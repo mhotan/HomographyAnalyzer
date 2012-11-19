@@ -1,7 +1,5 @@
 package edu.uw.homographyanalyzer.quicktransform;
 
-import com.example.homographyanalyzer.R;
-
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,6 +9,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import com.example.homographyanalyzer.R;
 
 public class SideBySideDisplay extends Activity implements View.OnClickListener{
 	private final String TAG = "TransDemo";

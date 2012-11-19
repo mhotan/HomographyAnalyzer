@@ -1,12 +1,12 @@
 package edu.uw.homographyanalyzer.quicktransform;
 
-import com.example.homographyanalyzer.R;
-
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
+
+import com.example.homographyanalyzer.R;
 
 public class Display extends Activity {
 	private Bitmap mDisplayImage = null;

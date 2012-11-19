@@ -30,6 +30,7 @@
         </activity>
         <activity android:name="edu.uw.homographyanalyzer.quicktransform.TransformationDemoActivity" >
         </activity>
+        <activity android:configChanges="orientation" android:name="edu.uw.homographyanalyzer.main.ocr.DisplayReaderActivity"></activity>
     </application>
 
 </manifest>

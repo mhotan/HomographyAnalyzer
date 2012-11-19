@@ -1,7 +1,6 @@
 package edu.uw.homographyanalyzer.main;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -15,6 +14,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Gallery;
 import android.widget.ImageView;
+
 import com.example.homographyanalyzer.R;
 
 import edu.uw.homographyanalyzer.global.GlobalLogger;
@@ -39,10 +39,10 @@ public class ImageSelectionAdapter extends BaseAdapter {
 	HashMap<Integer, ImageView> toShowMap;
 	HashMap<Integer, Uri> uriMap;
 	
-	private List<Bitmap> mBitMaps;
+	protected List<Bitmap> mBitMaps;
 	
 	//Default Search Image
-	private final Bitmap mPlaceHolder;
+	protected final Bitmap mPlaceHolder;
 	
 	private static int default_search_id = R.drawable.ic_action_search;
 	private int defaultItemBackground;
@@ -173,14 +173,9 @@ public class ImageSelectionAdapter extends BaseAdapter {
 	/**
 	 * Resets the image thumbnails to show the search button
 	 */
-	private void reset(){
+	public void reset(){
 		// Reset image to look 
 		mBitMaps.clear();
-		
-		// The first two images set to search boxes
-		for (int i = 0 ; i < 2/*Default size*/; ++i) {
-			mBitMaps.add(mPlaceHolder);
-		}
 	}
 	
 	public boolean isDefaultImage(int pos){

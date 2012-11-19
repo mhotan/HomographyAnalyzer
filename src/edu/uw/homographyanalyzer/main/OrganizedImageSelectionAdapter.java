@@ -116,4 +116,14 @@ public class OrganizedImageSelectionAdapter extends ImageSelectionAdapter {
 		buildImageViews();
 	}
 	
+	@Override
+	public void reset(){
+		super.reset();
+		
+		// The first two images set to search boxes
+		for (int i = 0 ; i < 2/*Default size*/; ++i) {
+			mBitMaps.add(mPlaceHolder);
+		}
+	}
+	
 }

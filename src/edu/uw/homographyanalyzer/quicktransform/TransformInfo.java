@@ -8,15 +8,12 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
-import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.features2d.Features2d;
 import org.opencv.features2d.KeyPoint;
 
 import android.graphics.Bitmap;
-import android.util.Log;
-import android.util.Pair;
 
 /**
  * Wrapper class that contains information to images
