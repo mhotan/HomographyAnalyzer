@@ -112,6 +112,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
             
+              <Button
+                android:id="@+id/ocrButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:text="@string/ocr_button_label" />
+            
         </LinearLayout>
     </SlidingDrawer>
 

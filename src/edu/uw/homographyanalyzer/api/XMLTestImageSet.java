@@ -18,7 +18,7 @@ public class XMLTestImageSet extends ApplianceImageSet {
 
 	private static final String TAG = "XMLTestImageSet";
 
-	private int mReferenceImageID;
+//	private int mReferenceImageID;
 
 	/**
 	 * 
@@ -27,13 +27,13 @@ public class XMLTestImageSet extends ApplianceImageSet {
 	 * @throws IOException For an IO Exception that occurs while parsing ID
 	 * @throws XmlPullParserException Illformatted XML format
 	 */
-	public XMLTestImageSet(Activity activity, int featureXMLID, int referenceImageID) 
+	public XMLTestImageSet(Activity activity, int featureXMLID) 
 			throws IOException, XmlPullParserException{
 
-		if (referenceImageID > 0)
-			mReferenceImageID = referenceImageID;
-		else
-			throw new IllegalArgumentException("Illegal Reference ID");
+//		if (referenceImageID > 0)
+//			mReferenceImageID = referenceImageID;
+//		else
+//			throw new IllegalArgumentException("Illegal Reference ID");
 
 		////////////////////////////////////////////
 		// Parse the XML for obtaining features

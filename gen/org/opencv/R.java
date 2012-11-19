@@ -35,9 +35,9 @@ public final class R {
     }
     public static final class id {
         public static final int base_image_view=0x7f0b0001;
-        public static final int btnToggle=0x7f0b0016;
+        public static final int btnToggle=0x7f0b001c;
         public static final int button1=0x7f0b0000;
-        public static final int choose_picture_button=0x7f0b0013;
+        public static final int choose_picture_button=0x7f0b0019;
         public static final int content=0x7f0b0007;
         public static final int exp_image=0x7f0b000d;
         public static final int exp_image_text=0x7f0b000c;
@@ -49,12 +49,18 @@ public final class R {
         public static final int imageRetrieverButton=0x7f0b000b;
         public static final int imagegrid=0x7f0b0005;
         public static final int imgDisplay=0x7f0b0003;
-        public static final int imgView1=0x7f0b0014;
-        public static final int imgView2=0x7f0b0015;
-        public static final int menu_settings=0x7f0b0017;
+        public static final int imgView1=0x7f0b001a;
+        public static final int imgView2=0x7f0b001b;
+        public static final int menu_settings=0x7f0b001d;
+        public static final int ocrButton=0x7f0b0012;
+        public static final int ocr_gallery=0x7f0b0013;
+        public static final int ocr_image_switcher=0x7f0b0016;
+        public static final int ocr_label=0x7f0b0014;
+        public static final int ocr_result=0x7f0b0017;
+        public static final int ocr_spinner=0x7f0b0015;
         public static final int query_image_view=0x7f0b0002;
         public static final int slidingDrawer=0x7f0b0006;
-        public static final int take_picture_button=0x7f0b0012;
+        public static final int take_picture_button=0x7f0b0018;
         public static final int threshhold_seekbar_textview=0x7f0b0010;
         public static final int threshold_seekbar=0x7f0b0011;
         public static final int transformButton=0x7f0b0009;
@@ -69,8 +75,8 @@ public final class R {
         public static final int image_chooser_layout2=0x7f030002;
         public static final int image_selector=0x7f030003;
         public static final int main=0x7f030004;
-        public static final int picture_chooser_layout=0x7f030005;
-        public static final int russel_stove=0x7f030006;
+        public static final int ocr_main=0x7f030005;
+        public static final int picture_chooser_layout=0x7f030006;
         public static final int sidebysidedisplay=0x7f030007;
         public static final int transformoptions=0x7f030008;
     }
@@ -87,6 +93,7 @@ public final class R {
         public static final int hello_world=0x7f080001;
         public static final int image_grid=0x7f080008;
         public static final int menu_settings=0x7f080002;
+        public static final int ocr_button_label=0x7f080012;
         public static final int picture_chooser_descriptor=0x7f080004;
         public static final int picture_taker_descriptor=0x7f080005;
         public static final int query_img_descriptor=0x7f080007;
@@ -103,8 +110,10 @@ public final class R {
     }
     public static final class xml {
         public static final int frigidaire_dryer_faqe7072lw=0x7f040000;
-        public static final int russel_stove=0x7f040001;
-        public static final int supported_appliances_ocr=0x7f040002;
+        public static final int mike_microwave=0x7f040001;
+        public static final int russel_stove=0x7f040002;
+        public static final int supported_appliances_ocr=0x7f040003;
+        public static final int whirlpool_washer=0x7f040004;
     }
     public static final class styleable {
         /** Attributes that can be used with a PicGallery.

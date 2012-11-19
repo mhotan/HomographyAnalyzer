@@ -7,15 +7,15 @@ import java.util.List;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
-import org.xmlpull.v1.XmlPullParserException;
 
 import android.app.Activity;
-import android.content.Context;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.util.Pair;
 import android.view.Menu;
@@ -37,15 +37,16 @@ import android.widget.Toast;
 
 import com.example.homographyanalyzer.R;
 
-import edu.uw.homographyanalyzer.api.XMLTestImageSet;
 import edu.uw.homographyanalyzer.camera.BaseImageTaker;
 import edu.uw.homographyanalyzer.camera.ExternalApplication;
 import edu.uw.homographyanalyzer.global.GlobalLogger;
 import edu.uw.homographyanalyzer.global.LoggerInterface;
+import edu.uw.homographyanalyzer.main.ocr.DisplayReaderActivity;
 import edu.uw.homographyanalyzer.quicktransform.TransformInfo;
 import edu.uw.homographyanalyzer.reusable.ComputerVision;
 import edu.uw.homographyanalyzer.reusable.ComputerVisionCallback;
 import edu.uw.homographyanalyzer.reusable.TransformationBuilder;
+import edu.uw.homographyanalyzer.tools.Utility;
 
 /*
  * Sample Activity meant to demonstrate how to use the implemented
@@ -103,30 +104,42 @@ public class MainActivity extends Activity implements LoggerInterface,
 ComputerVisionCallback, TransformationBuilder.TransformationStateListener, OnClickListener, 
 OnItemSelectedListener, OnSeekBarChangeListener {
 
-	private final Context This = this;
-
 	// Logging tag
 	private static final String TAG = "HomographyAnalyzer";
+	
+	// Path to store images o
+	public static final String DATA_PATH = Environment
+			.getExternalStorageDirectory().toString() + "/HomographyAnalyzer/";
+	public static final String WARPED_PATH = DATA_PATH + "/warped_img.jpg";
+	
 	// CV library ready to be used
 	private boolean mCVLibraryInitialized = false;
 
-	public static final String EXTRA_POSITION = TAG + "_POSITION";
-	public static final String BASE_URI_EXTRA = TAG + "BASE_URI";
-	public static final String QUERY_URI_EXTRA = TAG + "QUERY_URI";
-
+	private static final String PREFIX_TAG = "[" + TAG + "] ";
+	public static final String EXTRA_POSITION = PREFIX_TAG + "POSITION";
+	public static final String BASE_SOURCE_TYPE_EXTRA = PREFIX_TAG + "BASE_SOURCE_TYPE";
+	public static final String QUERY_SOURCE_TYPE_EXTRA = PREFIX_TAG + "QUERY_SOURCE_TYPE";
+	public static final int URI_TYPE_EXTRA = 0x1;
+	public static final int FILEPATH_TYPE_EXTRA = URI_TYPE_EXTRA + 1;
+	public static final String BASE_SOURCE_EXTRA = PREFIX_TAG + "BASE_SOURCE";
+	public static final String QUERY_SOURCE_EXTRA = PREFIX_TAG + "QUERY_SOURCE";
+	public static final String WARPED_SOURCE_EXTRA = PREFIX_TAG + "WARPED_SOURCE_EXTRA";
+	
 	//Target width for reading bitmaps in 
 	private static final int TARGET_WIDTH = 600;
 	private static final int TARGET_HEIGHT= 800;
 	
+	private Intent ocrIntent;
+	
 	// adapter to display images
 	private OrganizedImageSelectionAdapter mImageAdapter;
 
-	//Thumbnails of homography images
+	//Thumb nails of homography images
 	private Gallery mGallery;
-	private Button transformButton;
+	private Button transformButton, ocrButton;
 	private ImageButton searchButton;
 
-	// Selectors for tranform paramaters
+	// Selectors for transform parameters
 	private Spinner featureDetectorSpinner, homoMethodSpinner;
 	private SeekBar threshhold;
 
@@ -136,7 +149,7 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 	//Computer vision
 	private ComputerVision mCV;
 
-	// text to presented above seekbar
+	// text to presented above seek bar
 	private TextView mSeekbarText;
 	private TextView mExpandedImageText;
 
@@ -174,6 +187,10 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 		searchButton = (ImageButton) findViewById(R.id.imageRetrieverButton);
 		searchButton.setOnClickListener(this);
 
+		ocrButton = (Button) findViewById(R.id.ocrButton);
+		ocrButton.setOnClickListener(this);
+		ocrButton.setEnabled(false);
+		
 		mSeekbarText = (TextView) findViewById(R.id.threshhold_seekbar_textview);
 		mExpandedImageText = (TextView) findViewById(R.id.exp_image_text);
 		// List of features
@@ -313,7 +330,7 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 		}
 
 		// Assign the view to change based on who sent the request
-		// There are two positions to the that can be found
+		// There are two positions possibles
 		int position = requestCode;
 
 		//Check if file path or uri image source
@@ -325,17 +342,33 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 		// Getting source of the image
 
 		Bitmap image = null;
-		//Decode File path
+		//Decode File path f
 		if (filePath == null) {
 			//query the data
 			Uri pickedUri = data.getExtras().getParcelable(
 					BaseImageTaker.INTENT_RESULT_IMAGE_URI);
-			image = getBitmapFromURIviaInputStream(pickedUri);
+			image = getBitmapFromURIviaInputStream(getContentResolver(), pickedUri);
 
+			if (ocrIntent == null){
+				// TODO Add class for this intent
+				ocrIntent = new Intent(this, DisplayReaderActivity.class);
+			}
+			// Set the data for 
+			if (position == 0) {
+				// For reference image
+				ocrIntent.putExtra(BASE_SOURCE_TYPE_EXTRA, URI_TYPE_EXTRA);
+				ocrIntent.putExtra(BASE_SOURCE_EXTRA, pickedUri);
+			} else if (position == 1){
+				// For other image
+				ocrIntent.putExtra(QUERY_SOURCE_TYPE_EXTRA, URI_TYPE_EXTRA);
+				ocrIntent.putExtra(QUERY_SOURCE_EXTRA, pickedUri);
+			}
+			
+			
 		} else{
 			// Assign target dimension to read in images
-			int targetWidth = TARGET_WIDTH;
-			int targetHeight = TARGET_HEIGHT;
+			int targetWidth = TARGET_HEIGHT;
+			int targetHeight = TARGET_WIDTH;
 
 			
 			BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
@@ -347,7 +380,7 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 			int sampleSize = 1;
 			{
 				//use either width or height
-				if (currWidth>currHeight)
+				if ((currWidth>currHeight))
 					sampleSize = Math.round((float)currHeight/(float)targetHeight);
 				else
 					sampleSize = Math.round((float)currWidth/(float)targetWidth);
@@ -365,11 +398,15 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 			Log.e(TAG, message);
 			return;
 		} else {
+			// Display the image in the gallery
 			mImageAdapter.setImage(image, position);
+			
+			// Update the transformation process
 			if (position == 0)
 				tranBuilder.setReferenceImage(image);
 			else if (position == 1)
 				tranBuilder.setOtherImage(image);
+			
 		}
 	}
 
@@ -378,7 +415,7 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 	 * @param uri
 	 * @return
 	 */
-	private Bitmap getBitmapFromURIviaInputStream(Uri uri){
+	public static Bitmap getBitmapFromURIviaInputStream(ContentResolver resolver, Uri uri){
 
 		Bitmap image = null;
 		try {
@@ -387,13 +424,13 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 
 			BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
 			bmpOptions.inJustDecodeBounds = true;
-			InputStream is = getContentResolver().openInputStream(uri);
+			InputStream is = resolver.openInputStream(uri);
 			BitmapFactory.decodeStream(is,null, bmpOptions);
 			int currHeight = bmpOptions.outHeight;
 			int currWidth = bmpOptions.outWidth;
 
 			is.close();
-			InputStream is2 = getContentResolver().openInputStream(uri);
+			InputStream is2 = resolver.openInputStream(uri);
 
 			int sampleSize = 1;
 			{
@@ -434,7 +471,6 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 
 	@Override
 	public void onInitServiceFinished() {
-		// TODO Auto-generated method stub
 		logd("onInitServiceFinished()");
 		tranBuilder = new TransformationBuilder(mCV);
 		initializeFeatures(featureDetectorSpinner);
@@ -445,33 +481,22 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 
 	@Override
 	public void onInitServiceFailed() {
-		// TODO Auto-generated method stub
 		logd("onInitServiceFailed()");
 	}
 
 	@Override
 	public void cvLogd(String msg) {
-		// TODO Auto-generated method stub
 		logd("cvLogd()");
 	}
 
 	@Override
-	public void cvLogd(String tag, String msg) {
-		// TODO Auto-generated method stub
-
-	}
+	public void cvLogd(String tag, String msg) {}
 
 	@Override
-	public void cvLoge(String msg) {
-		// TODO Auto-generated method stub
-
-	}
+	public void cvLoge(String msg) {}
 
 	@Override
-	public void cvLoge(String tag, String msg) {
-		// TODO Auto-generated method stub
-
-	}
+	public void cvLoge(String tag, String msg) {}
 
 	/**
 	 *Starts new Activity to display Homography transformation
@@ -495,6 +520,17 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 
 			// Start transformation process
 			transformButton.setEnabled(true);
+			// Allow user to look for OCR conversion
+			ocrButton.setEnabled(true);
+		} else if (v.getId() == ocrButton.getId()){
+			// No support for filePath 
+			if (ocrIntent == null) return;
+
+			// TODO
+			Bitmap warp = tranBuilder.getWarpedImages().first;
+			Uri uri = Utility.saveBitmapToFile(warp, WARPED_PATH);
+			ocrIntent.putExtra(WARPED_SOURCE_EXTRA, uri);
+			startActivity(ocrIntent);
 		}
 	}
 
@@ -559,6 +595,7 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 	@Override
 	public void OnNoHomographyFound() {
 		transformButton.setEnabled(false);
+		ocrButton.setEnabled(false);
 	}
 
 	@Override

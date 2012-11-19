@@ -79,7 +79,7 @@ public class TransformationBuilder {
 		setFeatureDetector(ORB);
 		//Initialize Homography to default
 		setHomograhyMethod(RANSAC);
-		setRansacThreshhold(1);
+		setRansacThreshhold(3);
 	}
 
 
@@ -188,7 +188,7 @@ public class TransformationBuilder {
 	 */
 	public void setReferenceImage(Bitmap image){
 		if (image == mReferenceImage) return;
-		setImagePrivate(image, REF_IMG);
+		setImagePrivate(image, OTHER_IMG);
 	}
 
 	/**
@@ -197,7 +197,7 @@ public class TransformationBuilder {
 	 */
 	public void setOtherImage(Bitmap image){
 		if (image == mOtherImage) return;
-		setImagePrivate(image, OTHER_IMG);
+		setImagePrivate(image, REF_IMG);
 	}
 
 	private static final int REF_IMG = 0;

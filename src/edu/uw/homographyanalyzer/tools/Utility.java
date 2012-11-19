@@ -18,20 +18,26 @@ import org.opencv.features2d.KeyPoint;
 import org.opencv.imgproc.Imgproc;
 
 import android.graphics.Bitmap;
+import android.net.Uri;
 import edu.uw.homographyanalyzer.global.GlobalLogger;
 
 public class Utility {
 	/*
 	 * Save a bitmap to a file
 	 */
-	public static void saveBitmapToFile(Bitmap bmp, String path) {
+	public static Uri saveBitmapToFile(Bitmap bmp, String path) {
+		Uri u = null;
 		try {
-			FileOutputStream out = new FileOutputStream(new File(path));
+			u = null;
+			File f = new File(path);
+			u = Uri.fromFile(f);
+			FileOutputStream out = new FileOutputStream(f);
 			bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
 		} catch (FileNotFoundException e) {
 			GlobalLogger.getInstance().loge("Couldn't create file: " + path);
 			e.printStackTrace();
 		}
+		return u;
 	}
 
 	/*

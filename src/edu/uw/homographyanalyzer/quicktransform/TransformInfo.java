@@ -311,8 +311,10 @@ public class TransformInfo {
 				|| other_keyPoint == null)
 		return null;
 		Mat output = new Mat();
-		Features2d.drawMatches(reference_image, reference_keyPoint, 
-				other_image, other_keyPoint, matches, output);
+		List<MatOfDMatch> list = new LinkedList<MatOfDMatch>();
+		list.add(matches);
+		Features2d.drawMatches2(reference_image, reference_keyPoint, 
+				other_image, other_keyPoint, list, output);
 		return output;
 	}
 	
