@@ -100,7 +100,7 @@ public class TransformationBuilder {
 
 		// Check if storage has a complete homography
 		Mat homography = storage.getHomographyMatrix();
-		
+
 		Mat tgtImg = storage.getOtherMatrix();
 
 		// Transform the Target image to resemble the reference image 
@@ -281,7 +281,14 @@ public class TransformationBuilder {
 		@Override
 		public void onExtractedFeatures(ImageInformation info) {
 			storage.setReferenceImage(info.mImage, info.mFeatureKeyPts, info.mFeatureDescriptors);
-			mlistener.OnKeypointsFoundForReference(storage.getRefKeyPointImage());
+
+			// Target mat with keypoints drawn on it
+			Mat target_with_keypoints = new Mat();
+
+			// Draw the keypoints and output the new mat
+			mCV.drawKeypoints_RGBA(info.mImage, target_with_keypoints, info.mFeatureKeyPts);
+
+			mlistener.OnKeypointsFoundForReference(target_with_keypoints);
 			attemptToBuild();
 		}
 	}
@@ -296,7 +303,13 @@ public class TransformationBuilder {
 		@Override
 		public void onExtractedFeatures(ImageInformation info) {
 			storage.setOtherImage(info.mImage, info.mFeatureKeyPts, info.mFeatureDescriptors);
-			mlistener.OnKeypointsFoundForOther(storage.getRefKeyPointImage());
+			// Target mat with keypoints drawn on it
+			Mat target_with_keypoints = new Mat();
+
+			// Draw the keypoints and output the new mat
+			mCV.drawKeypoints_RGBA(info.mImage, target_with_keypoints, info.mFeatureKeyPts);
+			
+			mlistener.OnKeypointsFoundForOther(target_with_keypoints);
 			attemptToBuild();
 		}
 
@@ -402,7 +415,7 @@ public class TransformationBuilder {
 			mMatDMatches = mCV.getMatchingCorrespondences(mRefDescriptors, mTgtDescriptors);
 			MatOfDMatch matchRevers = mCV.getMatchingCorrespondences(mTgtDescriptors, mRefDescriptors);
 			mMatDMatches = mCV.getCrossMatches(mMatDMatches, matchRevers);
-			
+
 			// Calculate the matched points
 			// Store Corresponding matched points
 			tempStorage.setPutativeMatches(mMatDMatches);

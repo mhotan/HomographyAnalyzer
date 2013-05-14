@@ -551,7 +551,7 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 			List<Bitmap> bitmaps = mImageAdapter.getCurrentImages(); 
 			String imgName = "Image_";
 			for (int i = 0; i < bitmaps.size(); ++i) {
-				String completeDir = DATA_PATH + dir_path + imgName + "" + i;
+				String completeDir = dir_path + imgName + "" + i;
 				Utility.saveBitmapToFile(bitmaps.get(i), completeDir);
 			}
 			Toast.makeText(this, "Images saved!", Toast.LENGTH_SHORT).show();

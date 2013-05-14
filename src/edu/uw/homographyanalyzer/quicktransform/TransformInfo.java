@@ -4,14 +4,10 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
 import org.opencv.features2d.Features2d;
-import org.opencv.features2d.KeyPoint;
 
 import android.graphics.Bitmap;
 
@@ -62,7 +58,7 @@ public class TransformInfo {
 	private Mat reference_Descriptors, other_Descriptors;
 	
 	// Bitmaps of reference and other images with keypoints
-	private Mat reference_KPImage, other_KPImage;
+//	private Mat reference_KPImage, other_KPImage;
 	
 	// Matches of
 	private MatOfDMatch matches;
@@ -88,8 +84,8 @@ public class TransformInfo {
 		clone.other_image = other_image;
 		clone.reference_keyPoint = reference_keyPoint;
 		clone.other_keyPoint = other_keyPoint;
-		clone.reference_KPImage = reference_KPImage;
-		clone.other_KPImage = other_KPImage;
+//		clone.reference_KPImage = reference_KPImage;
+//		clone.other_KPImage = other_KPImage;
 		clone.matches = matches;
 //		clone.other_matched_points = other_matched_points;
 		clone.homography = homography;
@@ -115,8 +111,8 @@ public class TransformInfo {
 		homography = null;
 		reference_keyPoint = null;
 		other_keyPoint = null;
-		reference_KPImage = null;
-		other_KPImage = null;
+//		reference_KPImage = null;
+//		other_KPImage = null;
 		matches = null;
 		homography = null;
 		other_Descriptors = null;
@@ -152,7 +148,7 @@ public class TransformInfo {
 		reference_keyPoint = keyPoints;
 		reference_Descriptors = descriptors;
 		// Store current Image with Circles
-		reference_KPImage = getMatWithKP(reference_image, reference_keyPoint);
+//		reference_KPImage = getMatWithKP(reference_image, reference_keyPoint);
 	}
 
 	/**
@@ -167,7 +163,7 @@ public class TransformInfo {
 		other_keyPoint = keyPoints;
 		other_Descriptors = descriptors;
 		// Store current Image with circles
-		other_KPImage = getMatWithKP(other_image, other_keyPoint);
+//		other_KPImage = getMatWithKP(other_image, other_keyPoint);
 	}
 	
 	/**
@@ -281,24 +277,6 @@ public class TransformInfo {
 	}
 	
 	/**
-	 * @return null if no source and keypoint are available, 
-	 * an image with KeyPoints identified with reference image
-	 */
-	public Mat getRefKeyPointImage(){
-		return reference_KPImage == null ? null : 
-			reference_KPImage.clone();
-	}
-	
-	/**
-	 * @return null if no source and keypoint are available, 
-	 * an image with KeyPoints identified with Other image
-	 */
-	public Mat getOtherKeyPointImage(){
-		return other_KPImage == null ? null : 
-			other_KPImage.clone();
-	}
-	
-	/**
 	 * Using the images stored in t
 	 * @return null if no images exist or an image of two images of same appliance
 	 */
@@ -308,10 +286,15 @@ public class TransformInfo {
 				|| other_keyPoint == null)
 		return null;
 		Mat output = new Mat();
-		List<MatOfDMatch> list = new LinkedList<MatOfDMatch>();
-		list.add(matches);
-		Features2d.drawMatches2(reference_image, reference_keyPoint, 
-				other_image, other_keyPoint, list, output);
+		
+		// Need to copy 
+		Features2d.drawMatches(reference_image, reference_keyPoint, other_image, other_keyPoint,
+				matches, output);
+		
+//		List<MatOfDMatch> list = new LinkedList<MatOfDMatch>();
+//		list.add(matches);
+//		Features2d.drawMatches2(reference_image, reference_keyPoint, 
+//				other_image, other_keyPoint, list, output);
 		return output;
 	}
 	
@@ -342,48 +325,6 @@ public class TransformInfo {
 	 */
 	public List<Bitmap> getBitmaps(){
 		return new LinkedList<Bitmap>(generalPhotos);
-	}
-	
-//	clone.generalPhotos.addAll(generalPhotos);
-	/**
-	 * Returns a new matrix with circles drawn over key points
-	 * the size of each circle corelates with the size of the key point
-	 * 
-	 * @param src Source matrix to clone
-	 * @param mKeypoints array of keypoints to label on image
-	 * @modifies 
-	 * @requires src != null and keyPoints != null
-	 * @return new matrix with key points labeled by circles
-	 */
-	private Mat getMatWithKP(Mat src, MatOfKeyPoint matKeyPoints) {
-//		Mat image = new Mat();
-//		MatOfKeyPoint keypoints = new MatOfKeyPoint();
-//		KeyPoint[] mKeypoints;
-//		Point[] points;
-//
-//		Utils.bitmapToMat(bmp, image);
-//		Log.d(TAG,"doing feature detection");
-//		fd.detect(image, keypoints);
-
-//		Log.d(TAG,"drawing keypoints");
-//		KeyPoint[] mKeypoints = keypoints.toArray();
-//		Log.d(TAG,"number of features: " + mKeypoints.length);
-		
-		Mat image = src.clone();
-		KeyPoint[] keyPoints = matKeyPoints.toArray();
-		Point[] points = new Point[keyPoints.length];
-		for (int i = 0; i < points.length; i++) {
-			points[i] = keyPoints[i].pt;
-			Core.circle(image, points[i], (int) keyPoints[i].size, new Scalar(
-					255, 0, 0));
-		}
-		return image;
-		
-////		Bitmap result = Bitmap.createBitmap(, height,
-////				Bitmap.Config.ARGB_8888);
-//		Utils.matToBitmap(image, dest);
-//
-//		return dest;
 	}
 	
 }
