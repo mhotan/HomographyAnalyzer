@@ -17,7 +17,9 @@ import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.util.Pair;
+import edu.uw.homographyanalyzer.api.CVSingletons;
 import edu.uw.homographyanalyzer.quicktransform.TransformInfo;
+import edu.uw.homographyanalyzer.reusable.AsyncFeatureDetector.FeatureDetectionListener;
 
 /**
  * Class that is able to build a homography trasnformation between to images
@@ -93,26 +95,24 @@ public class TransformationBuilder {
 	 * pair.secod = inverse ivnersion 
 	 * @return null if couldnt build or Data other wise
 	 */
-	public Pair<Bitmap, Bitmap> getWarpedImages(){
+	public Bitmap getWarpedImage(){
 		if (!storage.isComplete()) return null;
 
 		// Check if storage has a complete homography
-		Mat homography = storage.getHomographyMatrix() ;
+		Mat homography = storage.getHomographyMatrix();
+		
+		Mat tgtImg = storage.getOtherMatrix();
 
-		// Do a transformation with non inverted map
-		Mat refMat = storage.getReferenceMatrix();
-
-		Mat result = ComputerVision.getWarpedImage(refMat, homography, true);
-		Bitmap disp = Bitmap.createBitmap(result.cols(), result.rows(),
+		// Transform the Target image to resemble the reference image 
+		// This might not be perfect or even close
+		// TODO Check if transformation is correct
+		Mat warped = mCV.getWarpedImage(tgtImg, homography, 
+				tgtImg.size(), false);
+		Bitmap disp = Bitmap.createBitmap(warped.cols(), warped.rows(),
 				Bitmap.Config.ARGB_8888); // Android uses ARGB_8888
-		Utils.matToBitmap(result, disp);
+		Utils.matToBitmap(warped, disp);
 
-		Mat resultInv = ComputerVision.getWarpedImage(refMat, homography, false);
-		Bitmap dispInv = Bitmap.createBitmap(resultInv.cols(), result.rows(),
-				Bitmap.Config.ARGB_8888); // Android uses ARGB_8888
-		Utils.matToBitmap(resultInv, dispInv);
-
-		return new Pair<Bitmap, Bitmap>(disp, dispInv);
+		return disp;
 	}
 
 	///////////////////////////////////////////////////////////////////
@@ -187,7 +187,7 @@ public class TransformationBuilder {
 	 */
 	public void setReferenceImage(Bitmap image){
 		if (image == mReferenceImage) return;
-		setImagePrivate(image, OTHER_IMG);
+		setImagePrivate(image, REF_IMG);
 	}
 
 	/**
@@ -196,7 +196,7 @@ public class TransformationBuilder {
 	 */
 	public void setOtherImage(Bitmap image){
 		if (image == mOtherImage) return;
-		setImagePrivate(image, REF_IMG);
+		setImagePrivate(image, OTHER_IMG);
 	}
 
 	private static final int REF_IMG = 0;
@@ -224,7 +224,8 @@ public class TransformationBuilder {
 				mRefFeatureDetector.cancel(true);
 				mRefFeatureDetector = null;
 			} // Start new feature detector
-			mRefFeatureDetector = new AsyncFeatureDetector(imgMat, REF_IMG);
+			mRefFeatureDetector = new AsyncFeatureDetector(mCV);
+			mRefFeatureDetector.setFeatureDetectionListener(new ReferenceFeatureListener());
 			mRefFeatureDetector.execute();
 			break;
 		case OTHER_IMG:
@@ -235,8 +236,10 @@ public class TransformationBuilder {
 			if (mOtherFeatureDetector != null){
 				mOtherFeatureDetector.cancel(true);
 				mOtherFeatureDetector = null;
-			} // Start new feature detector
-			mOtherFeatureDetector = new AsyncFeatureDetector(imgMat, OTHER_IMG);
+			} 
+			// Start new feature detector
+			mOtherFeatureDetector = new AsyncFeatureDetector(mCV);
+			mOtherFeatureDetector.setFeatureDetectionListener(new OtherFeatureListener());
 			mOtherFeatureDetector.execute();
 			break;			
 		}
@@ -265,53 +268,39 @@ public class TransformationBuilder {
 	// Image Processing
 
 	/**
-	 * Runs feature detection in the background for specific image
+	 * 
 	 * @author mhotan
 	 */
-	private class AsyncFeatureDetector extends AsyncTask<Void, Void, Pair<MatOfKeyPoint, Mat>>{
+	private class ReferenceFeatureListener implements FeatureDetectionListener {
 
-		private FeatureDetector mFd;
-		private int mWhichImg;
-		private Mat mImg;
-
-		public AsyncFeatureDetector(Mat img, int whichImg){
-			// Create new instances of thesse object to be run in background thread
-			mFd = getCurrentFeatureDetector();
-			mImg = img.clone();
-			mWhichImg = whichImg;
+		@Override
+		public void onFailedToExtractFeatures() {
+			Log.e(TAG, "Fail to Extract Reference Image features");
 		}
 
-		/**
-		 * Finds Key Points in new image
-		 */
 		@Override
-		protected Pair<MatOfKeyPoint, Mat> doInBackground(Void... params) {
-			MatOfKeyPoint matKeyPoints = mCV.findKeyPoints(mFd, mImg);
-			// Compute the feature 
-			Mat descriptors = new Mat();
-			getCurrentDescriptorExtractor().compute(mImg, matKeyPoints, descriptors);
-			return new Pair<MatOfKeyPoint, Mat>(matKeyPoints, descriptors);
+		public void onExtractedFeatures(ImageInformation info) {
+			storage.setReferenceImage(info.mImage, info.mFeatureKeyPts, info.mFeatureDescriptors);
+			mlistener.OnKeypointsFoundForReference(storage.getRefKeyPointImage());
+			attemptToBuild();
 		}
-		
-		//Runs on main thread
-		@Override
-		protected void onPostExecute(Pair<MatOfKeyPoint, Mat> result){
+	}
 
-			if (mWhichImg == REF_IMG){
-				storage.setReferenceImage(mImg, result.first, result.second);
-				mlistener.OnKeypointsFoundForReference(storage.getRefKeyPointImage());
-				// because image changed must attempt to build again
-				attemptToBuild();
-			} else if (mWhichImg == OTHER_IMG) {
-				storage.setOtherImage(mImg, result.first, result.second);
-				mlistener.OnKeypointsFoundForOther(storage.getOtherKeyPointImage());
-				// because image changed must attempt to build again
-				attemptToBuild();
-			}
+	private class OtherFeatureListener implements FeatureDetectionListener {
+
+		@Override
+		public void onFailedToExtractFeatures() {
+			Log.e(TAG, "Fail to Extract Reference Image features");
+		}
+
+		@Override
+		public void onExtractedFeatures(ImageInformation info) {
+			storage.setOtherImage(info.mImage, info.mFeatureKeyPts, info.mFeatureDescriptors);
+			mlistener.OnKeypointsFoundForOther(storage.getRefKeyPointImage());
+			attemptToBuild();
 		}
 
 	}
-
 
 	/**
 	 * Helper class to calculate find the homography between the reference and secondary image
@@ -321,9 +310,64 @@ public class TransformationBuilder {
 	 */
 	private class AsyncHomographyProcessor extends AsyncTask<Void, Void,Boolean>{
 
+		/**
+		 * Feature Detector to for both reference and target image
+		 */
+		private final FeatureDetector mFeatureDetector;
+
+		/**
+		 * A Feature descriptor used for each set of feature detected
+		 */
+		private final DescriptorExtractor mDescriptorExtractor;
+
+		/**
+		 * Storage for all the variables
+		 */
 		private final TransformInfo tempStorage;
-		private final FeatureDetector detector;
-		private final int tranformMethod, threshhold;
+
+		/**
+		 * Reference image and target image
+		 */
+		private final Mat mRefImg;
+
+		/**
+		 * Matrix of keypoints for the reference image
+		 */
+		private final MatOfKeyPoint mRefKeyPts; 
+
+		/**
+		 * Descriptor for the reference image
+		 */
+		private final Mat mRefDescriptors;
+
+		////////////////////////////////////////////////////////////////////////
+		//// Target values
+		////////////////////////////////////////////////////////////////////////
+
+		/**
+		 * Matrix representation for the target image 
+		 */
+		private final Mat mTgtImg;
+
+		/**
+		 * Matrix of key points 
+		 */
+		private final MatOfKeyPoint mTgtKeyPts;
+
+		/**
+		 * Matrix of target descriptor feature extraction
+		 */
+		private final Mat mTgtDescriptors;
+
+		/**
+		 * Mat of D Matches of this
+		 */
+		private MatOfDMatch mMatDMatches;
+
+		/**
+		 * Homography that is found between two images
+		 */
+		private Mat mHomography;
 
 		/**
 		 * Creates a new task to run
@@ -332,39 +376,47 @@ public class TransformationBuilder {
 		public AsyncHomographyProcessor(TransformInfo info){
 			//Create copies or use immutable objects
 			tempStorage = info.clone();
-			detector = getCurrentFeatureDetector();
-			tranformMethod = mHomographyMethods.get(mHomographyMethod);
-			threshhold = mRansacThreshhold;
+			mFeatureDetector = CVSingletons.getFeatureDetector();
+			mDescriptorExtractor = CVSingletons.getDescriptorExtractor();
+
+			Mat[] descriptors = info.getDescriptors();
+
+			mRefImg = info.getReferenceMatrix();
+			mRefKeyPts = info.getReferenceKeyPoints();
+			mRefDescriptors = descriptors[0];
+
+			mTgtImg = info.getOtherMatrix();
+			mTgtKeyPts = info.getOtherKeyPoints();
+			mTgtDescriptors = descriptors[1];
 		}
 
 		@Override
 		protected Boolean doInBackground(Void... params) {
 			publishProgress();
-			// Process Homography
-			Mat[] descriptors = tempStorage.getDescriptors();
-			// TODO Dohandle error case where list is empty
-			if (descriptors.length == 0) {
-				// Do something
+
+			if (mTgtKeyPts.empty()) {
+				Log.d(TAG, TAG+ ": No features");
+				return null;
 			}
-			
-			// 
-			MatOfDMatch matches = mCV.getMatchingCorrespondences(
-					descriptors[1], descriptors[0]);
-			
-			MatOfPoint2f[] matchedPnts = mCV.getCorrespondences(matches,
-					tempStorage.getReferenceKeyPoints(), tempStorage.getOtherKeyPoints());
-			
+
+			mMatDMatches = mCV.getMatchingCorrespondences(mRefDescriptors, mTgtDescriptors);
+
 			// Calculate the matched points
 			// Store Corresponding matched points
-			tempStorage.setPutativeMatches(matches);
+			tempStorage.setPutativeMatches(mMatDMatches);
 
-			// Convert points to MAt for calculation
-			// Find homography 
-			Mat homography = mCV.findHomography(matchedPnts[0], 
-					matchedPnts[1], tranformMethod, threshhold);
+			// Get points for homography calculation
+			MatOfPoint2f[] pts = mCV.getCorrespondences(mMatDMatches, mTgtKeyPts, mRefKeyPts);
 
-			// Store Homography
-			tempStorage.setHomographyMatrix(homography);
+			MatOfPoint2f tgt2f = pts[1];
+			MatOfPoint2f ref2f = pts[0];
+
+			// Find the transformation form reference to tgt
+			mHomography = mCV.findHomography( ref2f, tgt2f, 
+					CVSingletons.getHomographyMethod(), CVSingletons.getRansacThreshold());
+
+			tempStorage.setHomographyMatrix(mHomography);
+
 			return Boolean.TRUE;
 		}
 
@@ -433,7 +485,7 @@ public class TransformationBuilder {
 		return FeatureDetector.create(
 				mFeatureDetectorNames.get(mFeatureDetectorName));
 	}
-	
+
 	/**
 	 * Obtains the current descriptor extractor that pertains to the descriptor
 	 * @return current associated DescriptorExtractor 
@@ -473,21 +525,21 @@ public class TransformationBuilder {
 		//		mFeatureDetectorNames.put(SURF, FeatureDetector.SURF); //MH SIFT and SURF not in free OPENCV library 
 		mFeatureDetectorNames.put(ORB, FeatureDetector.ORB);
 		mFeatureDetectorNames.put(FAST, FeatureDetector.FAST);
-//		mFeatureDetectorNames.put(DYNAMIC_SIFT, FeatureDetector.DYNAMIC_SIFT);
-//		mFeatureDetectorNames.put(DYNAMIC_SURF, FeatureDetector.DYNAMIC_SURF);
+		//		mFeatureDetectorNames.put(DYNAMIC_SIFT, FeatureDetector.DYNAMIC_SIFT);
+		//		mFeatureDetectorNames.put(DYNAMIC_SURF, FeatureDetector.DYNAMIC_SURF);
 		mFeatureDetectorNames.put(DYNAMIC_FAST, FeatureDetector.DYNAMIC_FAST);
 		mFeatureDetectorNames.put(DYNAMIC_ORB, FeatureDetector.DYNAMIC_ORB);
-//		mFeatureDetectorNames.put(GRID_SIFT, FeatureDetector.GRID_SIFT);
-//		mFeatureDetectorNames.put(GRID_SURF, FeatureDetector.GRID_SURF);
+		//		mFeatureDetectorNames.put(GRID_SIFT, FeatureDetector.GRID_SIFT);
+		//		mFeatureDetectorNames.put(GRID_SURF, FeatureDetector.GRID_SURF);
 		mFeatureDetectorNames.put(GRID_FAST, FeatureDetector.GRID_FAST);
 		mFeatureDetectorNames.put(GRID_ORB, FeatureDetector.GRID_ORB);
-//		mFeatureDetectorNames.put(PYRAMID_SIFT, FeatureDetector.PYRAMID_SIFT);
-//		mFeatureDetectorNames.put(PYRAMID_SURF, FeatureDetector.PYRAMID_SURF);
+		//		mFeatureDetectorNames.put(PYRAMID_SIFT, FeatureDetector.PYRAMID_SIFT);
+		//		mFeatureDetectorNames.put(PYRAMID_SURF, FeatureDetector.PYRAMID_SURF);
 		mFeatureDetectorNames.put(PYRAMID_FAST,FeatureDetector.PYRAMID_FAST);
 		mFeatureDetectorNames.put(PYRAMID_ORB,FeatureDetector.PYRAMID_ORB);
 		// Add sift names
 	}
-	
+
 	private static final HashMap<Integer, Integer> mFeatureDescriptors = new HashMap<Integer, Integer>();
 	static {
 		//For all feature ORB feature detectors 
@@ -495,19 +547,19 @@ public class TransformationBuilder {
 		mFeatureDescriptors.put(FeatureDetector.DYNAMIC_ORB, DescriptorExtractor.ORB);
 		mFeatureDescriptors.put(FeatureDetector.GRID_ORB, DescriptorExtractor.ORB);
 		mFeatureDescriptors.put(FeatureDetector.PYRAMID_ORB, DescriptorExtractor.ORB);
-		
+
 		// For all Fast feature descriptors there is no FASt descriptor extractor
 		// therefore use a implementation that works...ORB
 		mFeatureDescriptors.put(FeatureDetector.FAST, DescriptorExtractor.ORB);
 		mFeatureDescriptors.put(FeatureDetector.DYNAMIC_FAST, DescriptorExtractor.ORB);
 		mFeatureDescriptors.put(FeatureDetector.GRID_FAST, DescriptorExtractor.ORB);
 		mFeatureDescriptors.put(FeatureDetector.PYRAMID_FAST, DescriptorExtractor.ORB);
-		
+
 		mFeatureDescriptors.put(FeatureDetector.SIFT, DescriptorExtractor.SIFT);
 		mFeatureDescriptors.put(FeatureDetector.PYRAMID_SIFT, DescriptorExtractor.SIFT);
 		mFeatureDescriptors.put(FeatureDetector.DYNAMIC_SIFT, DescriptorExtractor.SIFT);
 		mFeatureDescriptors.put(FeatureDetector.GRID_SIFT, DescriptorExtractor.SIFT);
-		
+
 		mFeatureDescriptors.put(FeatureDetector.SURF, DescriptorExtractor.SURF);
 		mFeatureDescriptors.put(FeatureDetector.DYNAMIC_SURF, DescriptorExtractor.SURF);
 		mFeatureDescriptors.put(FeatureDetector.PYRAMID_SURF, DescriptorExtractor.SURF);

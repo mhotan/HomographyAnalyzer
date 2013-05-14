@@ -159,17 +159,6 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-//		// Test
-//		try {
-//			new XMLTestImageSet(this, R.xml.frigidaire_dryer_faqe7072lw, 0);
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (XmlPullParserException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		
 		setContentView(R.layout.main);
 		// This needs to be done first because many other components
 		// depend on this global logger
@@ -507,16 +496,15 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 			transformButton.setEnabled(false);
 
 			// Remove all but the two base imagess
-			Pair<Bitmap, Bitmap> imagesToAdd = tranBuilder.getWarpedImages();
-			if (imagesToAdd == null){
+			Bitmap imageToAdd = tranBuilder.getWarpedImage();
+			if (imageToAdd == null){
 				//Notify User
 				mExpandedImageText.setText("Tranformation is not ready just Yet");
 				return;
 			} else
 				mExpandedImageText.setText(R.string.show_exp_image);
 
-			mImageAdapter.setWarpedImage(imagesToAdd.first);
-			mImageAdapter.setInvertedWarpedImage(imagesToAdd.second);
+			mImageAdapter.setWarpedImage(imageToAdd);
 
 			// Start transformation process
 			transformButton.setEnabled(true);
@@ -527,7 +515,7 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 			if (ocrIntent == null) return;
 
 			// TODO
-			Bitmap warp = tranBuilder.getWarpedImages().first;
+			Bitmap warp = tranBuilder.getWarpedImage();
 			Uri uri = Utility.saveBitmapToFile(warp, WARPED_PATH);
 			ocrIntent.putExtra(WARPED_SOURCE_EXTRA, uri);
 			startActivity(ocrIntent);

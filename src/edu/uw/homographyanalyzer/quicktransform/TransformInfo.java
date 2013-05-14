@@ -315,23 +315,6 @@ public class TransformInfo {
 		return output;
 	}
 	
-//	/**
-//	 * Returns a pair of two Point array
-//	 * pair.first = points on the reference image
-//	 * pair.second = points on the other image
-//	 * @return pair of Point[] of matches or null id there is stored arrays
-//	 */
-//	public Pair<MatOfPoint2f,MatOfPoint2f> getMatchPoints(){
-//		if (reference_matched_points == null ||
-//				other_matched_points == null)
-//			return null;
-//		
-//		Pair<MatOfPoint2f,MatOfPoint2f> p = new Pair<MatOfPoint2f,MatOfPoint2f>(
-//				(MatOfPoint2f)reference_matched_points.clone(),
-//				(MatOfPoint2f)other_matched_points.clone());
-//		return p;
-//	}
-	
 	/**
 	 * Returns a list of descriptors defined by current images
 	 * Order proceed as the reference image first followed by other images
