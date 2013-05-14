@@ -19,5 +19,7 @@
     <string name="transform">Transform</string>
     <string name="threshhold_seekbar_label">Choose size of threshhold</string>
     <string name="ocr_button_label">OCR!</string>
+    <string name="button_save_label">Save All</string>
+    <string name="input_save_hint">Directory</string>
 
 </resources>

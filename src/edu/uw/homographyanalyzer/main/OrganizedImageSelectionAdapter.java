@@ -58,6 +58,10 @@ public class OrganizedImageSelectionAdapter extends ImageSelectionAdapter {
 		addAllImagesToEnd(mDynamicList);
 	}
 	
+	public List<Bitmap> getCurrentImages(){
+		return new ArrayList<Bitmap>(mDynamicList);
+	}
+	
 	public String getTitle(Bitmap b){
 		if (mReference == b) return REFERENCE;
 		if (mOther == b) return OTHER;

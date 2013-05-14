@@ -1,5 +1,6 @@
 package edu.uw.homographyanalyzer.main;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -17,7 +18,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
-import android.util.Pair;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -26,6 +26,7 @@ import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Gallery;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -136,12 +137,14 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 
 	//Thumb nails of homography images
 	private Gallery mGallery;
-	private Button transformButton, ocrButton;
+	private Button transformButton, ocrButton, saveButton;
 	private ImageButton searchButton;
 
 	// Selectors for transform parameters
 	private Spinner featureDetectorSpinner, homoMethodSpinner;
 	private SeekBar threshhold;
+	
+	private EditText mDirectoryInput;
 
 	// Transformation Builder
 	private TransformationBuilder tranBuilder;
@@ -176,9 +179,15 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 		searchButton = (ImageButton) findViewById(R.id.imageRetrieverButton);
 		searchButton.setOnClickListener(this);
 
+		saveButton = (Button) findViewById(R.id.button_save);
+		saveButton.setOnClickListener(this);
+		saveButton.setEnabled(true);
+		
 		ocrButton = (Button) findViewById(R.id.ocrButton);
 		ocrButton.setOnClickListener(this);
 		ocrButton.setEnabled(false);
+		
+		mDirectoryInput = (EditText) findViewById(R.id.input_directory_name);
 		
 		mSeekbarText = (TextView) findViewById(R.id.threshhold_seekbar_textview);
 		mExpandedImageText = (TextView) findViewById(R.id.exp_image_text);
@@ -519,6 +528,33 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 			Uri uri = Utility.saveBitmapToFile(warp, WARPED_PATH);
 			ocrIntent.putExtra(WARPED_SOURCE_EXTRA, uri);
 			startActivity(ocrIntent);
+		} else if (v == saveButton) {
+			// Save all current images.
+			
+			String dir_path = mDirectoryInput.getText().toString();
+			if (dir_path == null || dir_path.isEmpty()) {
+				Toast.makeText(this, "Can't have nameless directory", Toast.LENGTH_SHORT).show();
+				return;
+			}
+			if (!dir_path.endsWith("/")) {
+				dir_path += "/";
+			}
+			
+			dir_path = DATA_PATH + dir_path;
+			
+			File directory = new File(dir_path);
+			if (directory.exists()) {
+				directory.delete();
+			}
+			directory.mkdirs();
+			
+			List<Bitmap> bitmaps = mImageAdapter.getCurrentImages(); 
+			String imgName = "Image_";
+			for (int i = 0; i < bitmaps.size(); ++i) {
+				String completeDir = DATA_PATH + dir_path + imgName + "" + i;
+				Utility.saveBitmapToFile(bitmaps.get(i), completeDir);
+			}
+			Toast.makeText(this, "Images saved!", Toast.LENGTH_SHORT).show();
 		}
 	}
 

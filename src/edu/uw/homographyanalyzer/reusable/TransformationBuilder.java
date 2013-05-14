@@ -226,7 +226,7 @@ public class TransformationBuilder {
 			} // Start new feature detector
 			mRefFeatureDetector = new AsyncFeatureDetector(mCV);
 			mRefFeatureDetector.setFeatureDetectionListener(new ReferenceFeatureListener());
-			mRefFeatureDetector.execute();
+			mRefFeatureDetector.execute(imgMat);
 			break;
 		case OTHER_IMG:
 			mOtherImage = image;
@@ -240,7 +240,7 @@ public class TransformationBuilder {
 			// Start new feature detector
 			mOtherFeatureDetector = new AsyncFeatureDetector(mCV);
 			mOtherFeatureDetector.setFeatureDetectionListener(new OtherFeatureListener());
-			mOtherFeatureDetector.execute();
+			mOtherFeatureDetector.execute(imgMat);
 			break;			
 		}
 
@@ -400,7 +400,9 @@ public class TransformationBuilder {
 			}
 
 			mMatDMatches = mCV.getMatchingCorrespondences(mRefDescriptors, mTgtDescriptors);
-
+			MatOfDMatch matchRevers = mCV.getMatchingCorrespondences(mTgtDescriptors, mRefDescriptors);
+			mMatDMatches = mCV.getCrossMatches(mMatDMatches, matchRevers);
+			
 			// Calculate the matched points
 			// Store Corresponding matched points
 			tempStorage.setPutativeMatches(mMatDMatches);
