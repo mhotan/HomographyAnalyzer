@@ -37,7 +37,6 @@ import android.widget.TextView;
 import android.widget.ViewSwitcher.ViewFactory;
 
 import com.example.homographyanalyzer.R;
-import com.googlecode.tesseract.android.TessBaseAPI;
 
 import edu.uw.homographyanalyzer.api.XMLTestImageSet;
 import edu.uw.homographyanalyzer.main.ImageSelectionAdapter;
@@ -293,32 +292,32 @@ ViewFactory {
 		// TODO obtain warped image place box around original and warped image
 		Log.v(TAG, "Before baseApi");
 
-		TessBaseAPI baseApi = new TessBaseAPI();
-		baseApi.setDebug(true);
-		baseApi.init(DATA_PATH, lang);
-		baseApi.setImage(_images[_images.length-1]);
-		String recognizedText = baseApi.getUTF8Text();
-		baseApi.end();
+	//	TessBaseAPI baseApi = new TessBaseAPI();
+	//	baseApi.setDebug(true);
+		//baseApi.init(DATA_PATH, lang);
+		//baseApi.setImage(_images[_images.length-1]);
+		//String recognizedText = baseApi.getUTF8Text();
+		//baseApi.end();
 
 		// You now have the text in recognizedText var, you can do anything with it.
 		// We will display a stripped out trimmed alpha-numeric version of it (if lang is eng)
 		// so that garbage doesn't make it to the display.
 
-		Log.v(TAG, "OCRED TEXT: " + recognizedText);
-		// Draw to new images and place in images
-		
-		// You now have the text in recognizedText var, you can do anything with it.
-		// We will display a stripped out trimmed alpha-numeric version of it (if lang is eng)
-		// so that garbage doesn't make it to the display.
-
-		Log.v(TAG, "OCRED TEXT: " + recognizedText);
-
-		if ( lang.equalsIgnoreCase("eng") ) {
-			recognizedText = recognizedText.replaceAll("[^a-zA-Z0-9]+", " ");
-		}
-		
-		recognizedText = recognizedText.trim();
-		_ocrResult.setText(recognizedText);
+//		Log.v(TAG, "OCRED TEXT: " + recognizedText);
+//		// Draw to new images and place in images
+//		
+//		// You now have the text in recognizedText var, you can do anything with it.
+//		// We will display a stripped out trimmed alpha-numeric version of it (if lang is eng)
+//		// so that garbage doesn't make it to the display.
+//
+//		Log.v(TAG, "OCRED TEXT: " + recognizedText);
+//
+//		if ( lang.equalsIgnoreCase("eng") ) {
+//			recognizedText = recognizedText.replaceAll("[^a-zA-Z0-9]+", " ");
+//		}
+//		
+//		recognizedText = recognizedText.trim();
+//		_ocrResult.setText(recognizedText);
 	}
 
 	private void drawBorder(Mat canvas, List<Point> points){
