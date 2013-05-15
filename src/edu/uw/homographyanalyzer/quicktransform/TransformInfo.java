@@ -7,9 +7,9 @@ import java.util.List;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
-import org.opencv.features2d.Features2d;
 
 import android.graphics.Bitmap;
+import edu.uw.homographyanalyzer.tools.Utility;
 
 /**
  * Wrapper class that contains information to images
@@ -45,34 +45,34 @@ public class TransformInfo {
 	 *  	generalPhotos != null;
 	 *  
 	 */
-	
-//	private static final int NUM_IMAGES = 2;
-	
+
+	//	private static final int NUM_IMAGES = 2;
+
 	// Base reference images
 	private Mat reference_image, other_image;
-	
+
 	// KeyPoint features for both images sizes are not equal
 	private MatOfKeyPoint reference_keyPoint, other_keyPoint;
-	
+
 	// KeyPoint features for both images sizes are not equal
 	private Mat reference_Descriptors, other_Descriptors;
-	
+
 	// Bitmaps of reference and other images with keypoints
-//	private Mat reference_KPImage, other_KPImage;
-	
+	//	private Mat reference_KPImage, other_KPImage;
+
 	// Matches of
 	private MatOfDMatch matches;
-	
+
 	//public Mat reference_mat, other_mat;
 	private Mat homography;
 
 	//List of general photos stored
 	private List<Bitmap> generalPhotos;
-	
+
 	public TransformInfo(){
 		generalPhotos = new ArrayList<Bitmap>();
 	}
-	
+
 	/**
 	 * Returns clone of this storage with all containing elements
 	 * @param src to be copied
@@ -84,24 +84,24 @@ public class TransformInfo {
 		clone.other_image = other_image;
 		clone.reference_keyPoint = reference_keyPoint;
 		clone.other_keyPoint = other_keyPoint;
-//		clone.reference_KPImage = reference_KPImage;
-//		clone.other_KPImage = other_KPImage;
+		//		clone.reference_KPImage = reference_KPImage;
+		//		clone.other_KPImage = other_KPImage;
 		clone.matches = matches;
-//		clone.other_matched_points = other_matched_points;
+		//		clone.other_matched_points = other_matched_points;
 		clone.homography = homography;
 		clone.generalPhotos.addAll(generalPhotos);
 		clone.reference_Descriptors = reference_Descriptors;
 		clone.other_Descriptors = other_Descriptors;
 		return clone;
 	}
-	
+
 	/**
 	 * @return if two images exists to find homography
 	 */
 	public boolean hasBothImages(){
 		return reference_image != null && other_image != null;
 	}
-	
+
 	/**
 	 * removes any memory of all artifacts and clears all knowledge of stored Bitmaps
 	 */
@@ -111,15 +111,15 @@ public class TransformInfo {
 		homography = null;
 		reference_keyPoint = null;
 		other_keyPoint = null;
-//		reference_KPImage = null;
-//		other_KPImage = null;
+		//		reference_KPImage = null;
+		//		other_KPImage = null;
 		matches = null;
 		homography = null;
 		other_Descriptors = null;
 		reference_Descriptors = null;
 		generalPhotos.clear();
 	}
-	
+
 	/**
 	 * @return if storage contains a homography, reference image, and other image
 	 */
@@ -132,10 +132,10 @@ public class TransformInfo {
 	public void addBitMap(Bitmap image) {
 		generalPhotos.add(image);
 	}
-	
+
 	////////////////////////////////////////////////////////////////////////////
 	// Mutating Methods
-	
+
 	/**
 	 * Sets the reference image and keypoints
 	 * 
@@ -148,7 +148,7 @@ public class TransformInfo {
 		reference_keyPoint = keyPoints;
 		reference_Descriptors = descriptors;
 		// Store current Image with Circles
-//		reference_KPImage = getMatWithKP(reference_image, reference_keyPoint);
+		//		reference_KPImage = getMatWithKP(reference_image, reference_keyPoint);
 	}
 
 	/**
@@ -163,9 +163,9 @@ public class TransformInfo {
 		other_keyPoint = keyPoints;
 		other_Descriptors = descriptors;
 		// Store current Image with circles
-//		other_KPImage = getMatWithKP(other_image, other_keyPoint);
+		//		other_KPImage = getMatWithKP(other_image, other_keyPoint);
 	}
-	
+
 	/**
 	 * Store matches from reference to other matches
 	 * @requires neither argument is null
@@ -175,7 +175,7 @@ public class TransformInfo {
 	public void setPutativeMatches(MatOfDMatch matches){
 		this.matches = matches;
 	}
-	
+
 	/**
 	 * Sets homography Matrix 
 	 * @param homography
@@ -183,7 +183,7 @@ public class TransformInfo {
 	public void setHomographyMatrix(Mat homography){
 		this.homography = homography;
 	}
-	
+
 	/**
 	 * If b exists b is added to end
 	 * if b is null it is not added
@@ -196,7 +196,7 @@ public class TransformInfo {
 		} 
 		generalPhotos.add(b);
 	}
-	
+
 	/**
 	 * Adds Bitmap to pos if pos is negative adds to
 	 * beginning. if pos is >= size then it is appended to the end
@@ -216,14 +216,14 @@ public class TransformInfo {
 		int position = Math.max(0, Math.min(generalPhotos.size()-1, pos));
 		generalPhotos.add(position, b);
 	}
-	
+
 	/**
 	 * Removes all Bitmaps from memory
 	 */
 	public void clearBitmaps(){
 		generalPhotos.clear();
 	}
-	
+
 	/**
 	 * Remove all bit maps from pos (inclusive) and after
 	 * @param pos 0 based index to remove to
@@ -232,7 +232,7 @@ public class TransformInfo {
 		if (pos < 0 || pos >= generalPhotos.size()) return;
 		generalPhotos.remove(pos);
 	}
-	
+
 	/**
 	 * Remove Bitmap if it exist
 	 * @param b Bitmap to remove
@@ -240,26 +240,26 @@ public class TransformInfo {
 	public void removeBitmapFrom(Bitmap b){
 		generalPhotos.remove(b);
 	}
-	
+
 	////////////////////////////////////////////////////////////////////////////
 	// Retrieving Methods
 	// NOTE: To ensure Representation exposure and unwanted client manipulation
 	// All getters are required to return copies
-	
+
 	/**
 	 * @return null if there is no reference image, a copy of reference image otherwise
 	 */
 	public Mat getReferenceMatrix(){
 		return reference_image == null ? null : reference_image.clone();
 	}
-	
+
 	/**
 	 * @return null if there is no other image, a copy of other image otherwise
 	 */
 	public Mat getOtherMatrix(){
 		return other_image == null ? null : other_image.clone();
 	}
-	
+
 	/**
 	 * @return null if no KeyPoints exits, or a copy of KeyPoint array
 	 */
@@ -267,7 +267,7 @@ public class TransformInfo {
 		return reference_keyPoint == null ? null :
 			new MatOfKeyPoint(reference_keyPoint);
 	}
-	
+
 	/**
 	 * @return null if no KeyPoints exits, or a copy of KeyPoint array
 	 */
@@ -275,7 +275,7 @@ public class TransformInfo {
 		return other_keyPoint == null ? null :
 			new MatOfKeyPoint(other_keyPoint);
 	}
-	
+
 	/**
 	 * Using the images stored in t
 	 * @return null if no images exist or an image of two images of same appliance
@@ -284,20 +284,20 @@ public class TransformInfo {
 		if (matches == null || reference_image == null || 
 				other_image == null || reference_keyPoint == null 
 				|| other_keyPoint == null)
-		return null;
-		
+			return null;
+
 		Mat output = new Mat();
 		// Need to copy 
-Utility.drawMatches(reference_image, reference_keyPoint, other_image,
-other_keyPoint, matches, output);
-		
-//		List<MatOfDMatch> list = new LinkedList<MatOfDMatch>();
-//		list.add(matches);
-//		Features2d.drawMatches2(reference_image, reference_keyPoint, 
-//				other_image, other_keyPoint, list, output);
+		Utility.drawMatches(reference_image, reference_keyPoint, other_image,
+				other_keyPoint, matches, output);
+
+		//		List<MatOfDMatch> list = new LinkedList<MatOfDMatch>();
+		//		list.add(matches);
+		//		Features2d.drawMatches2(reference_image, reference_keyPoint, 
+		//				other_image, other_keyPoint, list, output);
 		return output;
 	}
-	
+
 	/**
 	 * Returns a list of descriptors defined by current images
 	 * Order proceed as the reference image first followed by other images
@@ -318,7 +318,7 @@ other_keyPoint, matches, output);
 	public Mat getHomographyMatrix(){
 		return homography == null ? null : homography.clone();
 	}
-	
+
 	/**
 	 * Retrieve Bitmap images that are currently stored
 	 * @return
@@ -326,5 +326,5 @@ other_keyPoint, matches, output);
 	public List<Bitmap> getBitmaps(){
 		return new LinkedList<Bitmap>(generalPhotos);
 	}
-	
+
 }
