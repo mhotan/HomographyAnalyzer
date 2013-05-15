@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
 
 import org.opencv.android.Utils;
@@ -127,8 +128,8 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 	public static final String WARPED_SOURCE_EXTRA = PREFIX_TAG + "WARPED_SOURCE_EXTRA";
 	
 	//Target width for reading bitmaps in 
-	private static final int TARGET_WIDTH = 600;
-	private static final int TARGET_HEIGHT= 800;
+	private static final int TARGET_WIDTH = 1200;
+	private static final int TARGET_HEIGHT= 1600;
 	
 	private Intent ocrIntent;
 	
@@ -549,9 +550,10 @@ OnItemSelectedListener, OnSeekBarChangeListener {
 			directory.mkdirs();
 			
 			List<Bitmap> bitmaps = mImageAdapter.getCurrentImages(); 
+			
 			String imgName = "Image_";
 			for (int i = 0; i < bitmaps.size(); ++i) {
-				String completeDir = dir_path + imgName + "" + i;
+				String completeDir = dir_path + imgName + "" + i + ".png";
 				Utility.saveBitmapToFile(bitmaps.get(i), completeDir);
 			}
 			Toast.makeText(this, "Images saved!", Toast.LENGTH_SHORT).show();

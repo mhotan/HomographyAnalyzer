@@ -16,15 +16,15 @@ public class OrganizedImageSelectionAdapter extends ImageSelectionAdapter {
 	private static final String PUTATIVE_MATCHES_LINES = "Putative Matches with Lines";
 	private static final String REGULAR_WARP = "Regular Warp";
 	private static final String INVERT_WARP = "Inverse Warp";
-	
+
 	private Bitmap mReference, mOther;
 	private Bitmap mRefKP, mOtherKP;
 	private Bitmap mPutativeMatchesWithOutLines;
 	private Bitmap mPutativeMatchesWithLines;
 	private Bitmap mRegularWarp, mInvWarp;
-	
+
 	private List<Bitmap> mDynamicList;
-	
+
 	public OrganizedImageSelectionAdapter(Context galleryContext) {
 		super(galleryContext);
 		mDynamicList = new ArrayList<Bitmap>(10);
@@ -36,7 +36,7 @@ public class OrganizedImageSelectionAdapter extends ImageSelectionAdapter {
 	private void buildImageViews(){
 		//Strip away extra images
 		removeAllExtraImages();
-		
+
 		//Add the list of images
 		if (mReference != null)
 			setImage(mReference, 0);
@@ -57,11 +57,17 @@ public class OrganizedImageSelectionAdapter extends ImageSelectionAdapter {
 			mDynamicList.add(mInvWarp);
 		addAllImagesToEnd(mDynamicList);
 	}
-	
+
 	public List<Bitmap> getCurrentImages(){
-		return new ArrayList<Bitmap>(mDynamicList);
+		List<Bitmap> list = new ArrayList<Bitmap>();
+		if (mReference != null)
+			list.add(mReference);
+		if (mOther != null)
+			list.add(mOther);
+		list.addAll(mDynamicList);
+		return list;
 	}
-	
+
 	public String getTitle(Bitmap b){
 		if (mReference == b) return REFERENCE;
 		if (mOther == b) return OTHER;
@@ -73,25 +79,25 @@ public class OrganizedImageSelectionAdapter extends ImageSelectionAdapter {
 		if (mInvWarp == b) return INVERT_WARP;
 		else return "Error: No Title";
 	}
-	
+
 	public void setReferenceImage(Bitmap ref){
 		if (ref == null) return;
 		mReference = ref;
 		buildImageViews();
 	}
-	
+
 	public void setOtherImage(Bitmap other){
 		if (other == null) return;
 		mOther = other;
 		buildImageViews();
 	}
-	
+
 	public void setReferenceKeyPointImage(Bitmap img){
 		if (img == null) return;
 		mRefKP = img;
 		buildImageViews();
 	}
-	
+
 	public void setOtherKeyPointImage(Bitmap img){
 		if (img == null) return;
 		mOtherKP = img;
@@ -107,27 +113,27 @@ public class OrganizedImageSelectionAdapter extends ImageSelectionAdapter {
 		mPutativeMatchesWithLines = img;
 		buildImageViews();
 	}
-	
+
 	public void setWarpedImage(Bitmap img){
 		if (img == null) return;
 		mRegularWarp = img;
 		buildImageViews();
 	}
-	
+
 	public void setInvertedWarpedImage(Bitmap img){
 		if (img == null) return;
 		mInvWarp = img;
 		buildImageViews();
 	}
-	
+
 	@Override
 	public void reset(){
 		super.reset();
-		
+
 		// The first two images set to search boxes
 		for (int i = 0 ; i < 2/*Default size*/; ++i) {
 			mBitMaps.add(mPlaceHolder);
 		}
 	}
-	
+
 }

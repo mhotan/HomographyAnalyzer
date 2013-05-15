@@ -285,8 +285,8 @@ public class TransformInfo {
 				other_image == null || reference_keyPoint == null 
 				|| other_keyPoint == null)
 		return null;
-		Mat output = new Mat();
 		
+		Mat output = new Mat();
 		// Need to copy 
 		Features2d.drawMatches(reference_image, reference_keyPoint, other_image, other_keyPoint,
 				matches, output);
