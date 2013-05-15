@@ -288,8 +288,8 @@ public class TransformInfo {
 		Mat output = new Mat();
 		
 		// Need to copy 
-		Features2d.drawMatches(reference_image, reference_keyPoint, other_image, other_keyPoint,
-				matches, output);
+Utility.drawMatches(reference_image, reference_keyPoint, other_image,
+other_keyPoint, matches, output);
 		
 //		List<MatOfDMatch> list = new LinkedList<MatOfDMatch>();
 //		list.add(matches);
